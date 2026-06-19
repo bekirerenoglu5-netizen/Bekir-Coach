@@ -637,6 +637,7 @@ input[type=range].mood-range::-moz-range-thumb{
       <button class="tp-tab active" onclick="showTab('builder')">Program Oluştur</button>
       <button class="tp-tab" onclick="showTab('programs')">Programlarım</button>
       <button class="tp-tab" onclick="showTab('nutrition')">Beslenme</button>
+      <button class="tp-tab" onclick="showTab('tracker')">📊 Takip</button>
     </div>
   </nav>
 
@@ -744,6 +745,15 @@ input[type=range].mood-range::-moz-range-thumb{
 
     <!-- ── TAB PROGRAMS ── -->
     <div id="tab-programs" style="display:none">
+      <!-- Posture shortcut -->
+      <a href="posture.html" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-decoration:none">
+        <span style="font-size:24px">🔬</span>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#E8EDF2;margin-bottom:2px">Postür & Mobilite Analizi Modülü</div>
+          <div style="font-size:12px;color:#6B7A88">Yeni sekmede açılır — üyelerin için kullan</div>
+        </div>
+        <span style="color:#60A5FA;margin-left:auto">↗</span>
+      </a>
       <div id="progListWrap">
         <div style="text-align:center;color:var(--muted);padding:60px 20px;font-size:14px">Henüz program oluşturmadınız.</div>
       </div>
@@ -920,6 +930,98 @@ input[type=range].mood-range::-moz-range-thumb{
       </div>
     </div>
 
+    <!-- ── TAB TRACKER ── -->
+    <div id="tab-tracker" style="display:none">
+
+      <!-- Hero -->
+      <div style="background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:16px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(96,165,250,.1),transparent);pointer-events:none"></div>
+        <div class="tag" style="background:#0A1530;color:#60A5FA;border:1px solid #1A3060;margin-bottom:12px">📊 Üye Takip Paneli</div>
+        <div style="font-family:var(--display);font-size:26px;letter-spacing:.05em;margin-bottom:8px">ÜYE <span style="color:#60A5FA">TAKİP</span> SİSTEMİ</div>
+        <p style="font-size:13px;color:var(--muted2);line-height:1.6;max-width:500px;margin-bottom:16px">
+          Üyelerinin duygu durumu, motivasyon ve beslenme raporlarını buradan takip et. Üyeler değerlendirme yaptığında <strong style="color:#25D366">WhatsApp</strong>'a otomatik rapor gelir.
+        </p>
+
+        <!-- Supabase Setup -->
+        <div id="supabase-setup" style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:18px">
+          <div style="font-size:13px;font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px">
+            <span style="font-size:18px">🗄️</span> Supabase Bağlantısı
+            <span id="sb-status" style="font-size:11px;color:var(--muted);font-weight:400;margin-left:auto">Bağlı değil</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted2);margin-bottom:12px;line-height:1.6">
+            Ücretsiz Supabase hesabı oluştur → URL ve API Key'i gir → Tüm üye verileri buraya akar.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+            <div>
+              <label style="font-size:11px;color:var(--muted2);margin-bottom:4px;display:block">Supabase Project URL</label>
+              <input id="sb-url" type="url" placeholder="https://xxxx.supabase.co" style="font-size:12px;font-family:var(--mono)">
+            </div>
+            <div>
+              <label style="font-size:11px;color:var(--muted2);margin-bottom:4px;display:block">Anon/Public API Key</label>
+              <input id="sb-key" type="text" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="font-size:12px;font-family:var(--mono)">
+            </div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" onclick="window.open('https://supabase.com','_blank')">🔗 Supabase.com'a Git</button>
+            <button class="btn btn-sm" style="background:#3ECF8E;color:#000;font-weight:700" onclick="saveSupabase()">Bağlan & Kaydet</button>
+          </div>
+          <div id="sb-msg" style="font-size:12px;margin-top:10px;display:none"></div>
+        </div>
+      </div>
+
+      <!-- Stats cards -->
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px" id="trackerStats">
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:#60A5FA" id="stat-members">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Üye</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:#10B981" id="stat-reports">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Rapor</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:var(--fire)" id="stat-avg">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Ort. Skor</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:#F59E0B" id="stat-today">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Bugün</div>
+        </div>
+      </div>
+
+      <!-- Reports table -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="card-title" style="margin:0">Son Değerlendirmeler</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadReports()">🔄 Yenile</button>
+        </div>
+        <div id="reportsTable">
+          <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">
+            Supabase bağlantısı kurulduktan sonra üye raporları burada görünecek.<br><br>
+            <strong style="color:var(--text)">Hemen başlamak için:</strong><br>
+            Yukarıdaki kutuya Supabase bilgilerini gir ve "Bağlan" butonuna bas.
+          </div>
+        </div>
+      </div>
+
+      <!-- WhatsApp info -->
+      <div style="background:linear-gradient(135deg,#041A0A,#080A0C);border:1px solid #1A3020;border-radius:12px;padding:18px;margin-top:16px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <span style="font-size:22px">📱</span>
+          <div>
+            <div style="font-size:14px;font-weight:700;color:#25D366">WhatsApp Bildirim Aktif</div>
+            <div style="font-size:12px;color:var(--muted2)">+90 505 543 19 35 numarasına otomatik rapor gönderilecek</div>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--muted2);line-height:1.7">
+          ✅ Üye duygu durumu doldurduğunda → <strong style="color:#25D366">WhatsApp raporu</strong> gelir<br>
+          ✅ Antrenman niyeti, enerji, motivasyon, uyku puanı — hepsi dahil<br>
+          ✅ Üyenin yazdığı notlar da iletilir<br>
+          ⚡ Supabase ile birleştirince panelden de görebilirsin
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -970,6 +1072,16 @@ input[type=range].mood-range::-moz-range-thumb{
     </div>
 
     <div class="mv-ex-list" id="exList"></div>
+
+    <!-- Posture Analysis Button -->
+    <a href="posture.html" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:14px;padding:18px 20px;margin-bottom:16px;text-decoration:none;transition:border .2s" onmouseover="this.style.borderColor='#60A5FA'" onmouseout="this.style.borderColor='#1A2540'">
+      <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1A3060,#0A1530);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid #2A4080">🔬</div>
+      <div style="flex:1">
+        <div style="font-size:15px;font-weight:700;color:#E8EDF2;margin-bottom:3px">Postür & Mobilite Analizi</div>
+        <div style="font-size:12px;color:#6B7A88;line-height:1.5">Kamera ile iskelet analizi · 7 mobilite testi · Postür değerlendirmesi · Egzersiz önerileri</div>
+      </div>
+      <div style="color:#60A5FA;font-size:18px;flex-shrink:0">→</div>
+    </a>
 
     <!-- Reminder -->
     <div class="reminder-card">
@@ -1364,10 +1476,11 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 
 /* ─── TABS ─── */
 function showTab(t) {
-  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition'][i] === t));
+  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition','tracker'][i] === t));
   document.getElementById('tab-builder').style.display = t === 'builder' ? 'block' : 'none';
   document.getElementById('tab-programs').style.display = t === 'programs' ? 'block' : 'none';
   document.getElementById('tab-nutrition').style.display = t === 'nutrition' ? 'block' : 'none';
+  const tt = document.getElementById('tab-tracker'); if(tt) tt.style.display = t === 'tracker' ? 'block' : 'none';
   if (t === 'programs') renderProgList();
 }
 
@@ -1477,7 +1590,7 @@ function getSelectedDays() {
     .filter(d => document.getElementById('day_' + d)?.checked);
 }
 
-function generateLink() {
+async function generateLink() {
   const member = document.getElementById('memberName').value.trim();
   const pname = document.getElementById('programName').value.trim();
   if (!member) { toast('Üye adını gir!'); return; }
@@ -1500,11 +1613,46 @@ function generateLink() {
   savedProgs.unshift(program);
   localStorage.setItem('bc_programs', JSON.stringify(savedProgs));
 
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(program))));
-  const link = `${location.origin}${location.pathname}?data=${encoded}`;
+  // Try to save to Supabase for short link
+  let link;
+  try {
+    const btn = document.querySelector('[onclick="generateLink()"]');
+    if(btn) { btn.textContent = '⏳ Kaydediliyor...'; btn.disabled = true; }
+    
+    const res = await fetch(sbUrl + '/rest/v1/programs', {
+      method: 'POST',
+      headers: {
+        'apikey': sbKey,
+        'Authorization': 'Bearer ' + sbKey,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify({
+        short_id: program.id,
+        member_name: program.member,
+        program_name: program.name,
+        data: program
+      })
+    });
+
+    if (res.ok) {
+      link = location.origin + location.pathname + '?p=' + program.id;
+      toast('✅ Kısa link oluşturuldu!');
+    } else {
+      throw new Error('Supabase error');
+    }
+    if(btn) { btn.textContent = '⚡ Program Linki Oluştur & Gönder'; btn.disabled = false; }
+  } catch(e) {
+    // Fallback to long link
+    const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(program))));
+    link = location.origin + location.pathname + '?data=' + encoded;
+    const btn = document.querySelector('[onclick="generateLink()"]');
+    if(btn) { btn.textContent = '⚡ Program Linki Oluştur & Gönder'; btn.disabled = false; }
+    toast('✅ Link oluşturuldu!');
+  }
+
   document.getElementById('generatedLink').value = link;
   document.getElementById('linkOutput').style.display = 'block';
-  toast('✅ Link oluşturuldu!');
 }
 
 function copyLink() {
@@ -2117,6 +2265,226 @@ function transferToNutrition() {
 }
 
 
+
+/* ═══════════════════════════════════
+   SUPABASE TRACKER
+═══════════════════════════════════ */
+// Supabase credentials — hardcoded
+let sbUrl = 'https://gqvtngmmvzagreqjfyrk.supabase.co';
+let sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxdnRuZ21tdnphZ3JlcWpmeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4OTQ3NTMsImV4cCI6MjA5NzQ3MDc1M30.sOVQPVonNapiOIguq_hzrAkWCORNMBhoGMhwaOOk_aQ';
+
+// Auto-connect on load
+window.addEventListener('load', () => {
+  const urlEl = document.getElementById('sb-url');
+  const keyEl = document.getElementById('sb-key');
+  if(urlEl) urlEl.value = sbUrl;
+  if(keyEl) keyEl.value = sbKey;
+  updateSbStatus(true);
+  // Auto-load reports if on tracker tab
+  setTimeout(() => loadReports(), 500);
+});
+
+function saveSupabase() {
+  const url = document.getElementById('sb-url')?.value.trim();
+  const key = document.getElementById('sb-key')?.value.trim();
+  if (!url || !key) { showSbMsg('URL ve API Key gir!', 'var(--fire)'); return; }
+  sbUrl = url; sbKey = key;
+  localStorage.setItem('bc_sb_url', url);
+  localStorage.setItem('bc_sb_key', key);
+  // Test connection & create table
+  initSupabase();
+}
+
+async function initSupabase() {
+  showSbMsg('Bağlanıyor...', '#60A5FA');
+  try {
+    // Create table if not exists via RPC — try a simple select first
+    const res = await sbFetch('GET', '/rest/v1/mood_reports?limit=1');
+    if (res.ok) {
+      updateSbStatus(true);
+      showSbMsg('✅ Bağlantı başarılı! Veriler yükleniyor...', '#10B981');
+      loadReports();
+    } else if (res.status === 404 || res.status === 400) {
+      // Table might not exist — show create instructions
+      updateSbStatus(false);
+      showSbMsg('⚠️ "mood_reports" tablosu bulunamadı. Aşağıdaki SQL\u2019i Supabase SQL Editor\u2019a yapıştır.', '#F59E0B');
+      showCreateSQL();
+    } else {
+      showSbMsg('❌ Hata: ' + res.status + ' — URL ve Key\u2019i kontrol et.', 'var(--fire)');
+    }
+  } catch(e) {
+    showSbMsg('❌ Bağlantı hatası: ' + e.message, 'var(--fire)');
+  }
+}
+
+function showCreateSQL() {
+  const msgEl = document.getElementById('sb-msg');
+  if (!msgEl) return;
+  msgEl.style.display = 'block';
+  msgEl.innerHTML = `
+    <div style="margin-top:8px;background:var(--s3);border-radius:8px;padding:12px">
+      <div style="font-size:11px;color:#F59E0B;font-weight:700;margin-bottom:8px">Supabase → SQL Editor → New Query → Yapıştır → Run:</div>
+      <pre style="font-size:10px;color:#60A5FA;line-height:1.6;overflow-x:auto;white-space:pre-wrap">CREATE TABLE mood_reports (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  member_name text,
+  program_name text,
+  score integer,
+  feeling integer,
+  energy integer,
+  motiv integer,
+  sleep integer,
+  workout text,
+  physical text[],
+  note text,
+  emoji text,
+  label text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE mood_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON mood_reports FOR ALL USING (true) WITH CHECK (true);</pre>
+      <button class="btn btn-sm" style="background:#3ECF8E;color:#000;font-weight:700;margin-top:8px" onclick="copySQL()">SQL'i Kopyala</button>
+    </div>`;
+}
+
+function copySQL() {
+  const sql = `CREATE TABLE mood_reports (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  member_name text,
+  program_name text,
+  score integer,
+  feeling integer,
+  energy integer,
+  motiv integer,
+  sleep integer,
+  workout text,
+  physical text[],
+  note text,
+  emoji text,
+  label text,
+  created_at timestamptz DEFAULT now()
+);
+ALTER TABLE mood_reports ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON mood_reports FOR ALL USING (true) WITH CHECK (true);`;
+  navigator.clipboard.writeText(sql).then(() => toast('✅ SQL kopyalandı!'));
+}
+
+async function sbFetch(method, path, body) {
+  const opts = {
+    method,
+    headers: {
+      'apikey': sbKey,
+      'Authorization': 'Bearer ' + sbKey,
+      'Content-Type': 'application/json',
+      'Prefer': method === 'POST' ? 'return=minimal' : ''
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(sbUrl + path, opts);
+}
+
+async function saveMoodToSupabase(entry, score) {
+  if (!sbUrl || !sbKey) return;
+  try {
+    await sbFetch('POST', '/rest/v1/mood_reports', {
+      member_name: prog?.member || 'Bilinmiyor',
+      program_name: prog?.name || '-',
+      score,
+      feeling: moodData.feeling,
+      energy: moodData.energy,
+      motiv: moodData.motiv,
+      sleep: moodData.sleep,
+      workout: moodData.workout,
+      physical: moodData.physical,
+      note: moodData.note,
+      emoji: moodData.emoji,
+      label: entry.label
+    });
+  } catch(e) { console.log('Supabase save error:', e); }
+}
+
+async function loadReports() {
+  if (!sbUrl || !sbKey) return;
+  const el = document.getElementById('reportsTable');
+  if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Yükleniyor...</div>';
+  try {
+    const res = await sbFetch('GET', '/rest/v1/mood_reports?order=created_at.desc&limit=50');
+    if (!res.ok) { if(el) el.innerHTML = '<div style="padding:20px;color:var(--fire)">Veri yüklenemedi.</div>'; return; }
+    const data = await res.json();
+    renderReports(data);
+    updateStats(data);
+  } catch(e) {
+    if(el) el.innerHTML = '<div style="padding:20px;color:var(--fire)">Hata: ' + e.message + '</div>';
+  }
+}
+
+function renderReports(data) {
+  const el = document.getElementById('reportsTable');
+  if (!el) return;
+  if (!data.length) {
+    el.innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted);font-size:13px">Henüz değerlendirme yok.<br>Üyeler değerlendirme yaptıkça burada görünecek.</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div style="overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12px">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border)">
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:600;white-space:nowrap">Tarih</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:600">Üye</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:600">Skor</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:600">⚡</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:600">💪</th>
+          <th style="padding:8px 10px;text-align:center;color:var(--muted);font-weight:600">😴</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:600">Antrenman</th>
+          <th style="padding:8px 10px;text-align:left;color:var(--muted);font-weight:600">Not</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${data.map(r => {
+          const d = new Date(r.created_at);
+          const dateStr = d.toLocaleDateString('tr-TR', { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' });
+          const scoreColor = r.score >= 8 ? '#10B981' : r.score >= 6 ? '#F59E0B' : r.score >= 4 ? '#FF8C42' : '#FF4444';
+          const wt = { yes:'✅ Yapacak', maybe:'🤔 Belki', no:'❌ Hayır' }[r.workout] || '-';
+          return `<tr style="border-bottom:1px solid var(--border);transition:background .15s" onmouseover="this.style.background='var(--s2)'" onmouseout="this.style.background='transparent'">
+            <td style="padding:10px;color:var(--muted);white-space:nowrap;font-family:var(--mono)">${dateStr}</td>
+            <td style="padding:10px;font-weight:600">${r.emoji || ''} ${r.member_name || '-'}</td>
+            <td style="padding:10px;text-align:center;font-family:var(--display);font-size:18px;color:${scoreColor}">${r.score}</td>
+            <td style="padding:10px;text-align:center;color:var(--muted2)">${r.energy || '-'}</td>
+            <td style="padding:10px;text-align:center;color:var(--muted2)">${r.motiv || '-'}</td>
+            <td style="padding:10px;text-align:center;color:var(--muted2)">${r.sleep || '-'}</td>
+            <td style="padding:10px;color:var(--muted2);white-space:nowrap">${wt}</td>
+            <td style="padding:10px;color:var(--muted2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.note || ''}">${r.note || '—'}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+function updateStats(data) {
+  const members = [...new Set(data.map(r => r.member_name))].length;
+  const avg = data.length ? (data.reduce((s,r) => s + r.score, 0) / data.length).toFixed(1) : '—';
+  const today = data.filter(r => new Date(r.created_at).toDateString() === new Date().toDateString()).length;
+  const s = id => document.getElementById(id);
+  if(s('stat-members')) s('stat-members').textContent = members || '—';
+  if(s('stat-reports')) s('stat-reports').textContent = data.length || '—';
+  if(s('stat-avg')) s('stat-avg').textContent = avg;
+  if(s('stat-today')) s('stat-today').textContent = today;
+}
+
+function updateSbStatus(ok) {
+  const el = document.getElementById('sb-status');
+  if (el) {
+    el.textContent = ok ? '✅ Bağlı' : '❌ Bağlı değil';
+    el.style.color = ok ? '#10B981' : 'var(--fire)';
+  }
+}
+
+function showSbMsg(msg, color) {
+  const el = document.getElementById('sb-msg');
+  if (el) { el.style.display = 'block'; el.style.color = color; el.textContent = msg; }
+}
+
 /* ═══════════════════════════════════
    MOOD CHECK-IN SYSTEM
 ═══════════════════════════════════ */
@@ -2297,6 +2665,9 @@ function submitMood() {
   if (history.length > 14) history.pop(); // keep 2 weeks
   localStorage.setItem(key, JSON.stringify(history));
 
+  // Save to Supabase if connected
+  saveMoodToSupabase(entry, score);
+
   // Render history
   renderMoodHistory(history);
 
@@ -2305,6 +2676,50 @@ function submitMood() {
   if (fab) {
     fab.querySelector('.mfab-icon').textContent = moodData.emoji;
     fab.querySelector('.mfab-ping').style.display = 'none';
+  }
+
+  // WhatsApp bildirimi gönder
+  sendWhatsAppReport(entry, score, res.label);
+}
+
+function sendWhatsAppReport(entry, score, label) {
+  const memberName = prog?.member || 'Üye';
+  const progName = prog?.name || 'Program';
+  const workoutText = { yes: '✅ Yapacak', maybe: '🤔 Belki yapacak', no: '❌ Yapmayacak' }[moodData.workout] || '-';
+  const physicalText = moodData.physical.length ? moodData.physical.join(', ') : 'Belirtmedi';
+  const noteText = moodData.note ? '\n📝 Not: ' + moodData.note : '';
+
+  const msg = `🏋️ *BEKİR COACH — Günlük Rapor*
+━━━━━━━━━━━━━━━
+👤 *Üye:* ${memberName}
+📋 *Program:* ${progName}
+📅 *Tarih:* ${entry.date}
+━━━━━━━━━━━━━━━
+🎯 *Genel Skor:* ${score}/10 — ${label}
+
+😊 *Ruh Hali:* ${moodData.feeling}/10 ${entry.emoji}
+⚡ *Enerji:* ${moodData.energy}/10
+💪 *Motivasyon:* ${moodData.motiv}/10
+😴 *Uyku:* ${moodData.sleep}/10
+
+🏃 *Bugün Antrenman:* ${workoutText}
+🦴 *Fiziksel Durum:* ${physicalText}${noteText}
+━━━━━━━━━━━━━━━
+_Bekir Coach Uygulaması_`;
+
+  const encoded = encodeURIComponent(msg);
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encoded}`;
+
+  // Show WhatsApp button in result
+  const coachEl = document.getElementById('moodCoachMsg');
+  if (coachEl) {
+    const waBtn = document.createElement('a');
+    waBtn.href = waUrl;
+    waBtn.target = '_blank';
+    waBtn.rel = 'noopener';
+    waBtn.style.cssText = 'display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border-radius:10px;padding:13px 20px;font-family:var(--body);font-size:14px;font-weight:700;text-decoration:none;margin-top:12px;transition:opacity .2s';
+    waBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Antrenöre WhatsApp Raporu Gönder';
+    coachEl.appendChild(waBtn);
   }
 }
 
@@ -2337,9 +2752,44 @@ function closeAI() {
   document.body.style.overflow = '';
 }
 
+
+async function loadProgramById(shortId) {
+  // Show loading screen
+  document.getElementById('trainer-panel').style.display = 'none';
+  document.body.innerHTML += '<div id="loading-screen" style="position:fixed;inset:0;background:#080A0C;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:9999"><div style=\"font-family:Bebas Neue,sans-serif;font-size:32px;color:#FF5C00;letter-spacing:.1em\">BEKİR COACH</div><div style=\"width:40px;height:40px;border:3px solid #252B31;border-top-color:#FF5C00;border-radius:50%;animation:spin 1s linear infinite\"></div><div style=\"font-size:13px;color:#6B7A88\">Program yükleniyor...</div></div><style>@keyframes spin{to{transform:rotate(360deg)}}</style>';
+
+  try {
+    const res = await fetch(sbUrl + '/rest/v1/programs?short_id=eq.' + shortId + '&select=data&limit=1', {
+      headers: { 'apikey': sbKey, 'Authorization': 'Bearer ' + sbKey }
+    });
+    if (res.ok) {
+      const rows = await res.json();
+      if (rows.length) {
+        const loadEl = document.getElementById('loading-screen');
+        if (loadEl) loadEl.remove();
+        document.getElementById('trainer-panel').style.display = 'none';
+        loadMember(rows[0].data);
+        return;
+      }
+    }
+  } catch(e) {}
+  
+  // Not found
+  const loadEl = document.getElementById('loading-screen');
+  if (loadEl) loadEl.innerHTML = '<div style="text-align:center;padding:40px"><div style="font-size:48px;margin-bottom:16px">😕</div><div style="font-size:18px;font-weight:700;color:#E8EDF2;margin-bottom:8px">Program Bulunamadı</div><div style="font-size:13px;color:#6B7A88">Link geçersiz veya süresi dolmuş olabilir.<br>Antrenörünüzden yeni link isteyin.</div></div>';
+}
+
 /* ─── INIT ─── */
 (function init() {
   const params = new URLSearchParams(location.search);
+
+  // Short link — load from Supabase
+  const shortId = params.get('p');
+  if (shortId) {
+    loadProgramById(shortId);
+    return;
+  }
+
   const ndata = params.get('ndata');
   if (ndata) {
     try {

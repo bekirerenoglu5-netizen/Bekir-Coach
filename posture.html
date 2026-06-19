@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bekir Coach — Postür & Mobilite Analizi</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#080A0C;--s1:#0F1214;--s2:#161A1D;--s3:#1E2429;
+  --border:#252B31;--border2:#2E363E;
+  --fire:#FF5C00;--fire2:#FF8C42;
+  --text:#E8EDF2;--muted:#6B7A88;--muted2:#8A9BAA;
+  --green:#3DDB85;--blue:#60A5FA;--purple:#A78BFA;
+  --display:'Bebas Neue',sans-serif;
+  --body:'Inter',sans-serif;--mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--s1)}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px}
+
+/* ── SHARED ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:none;border-radius:8px;font-family:var(--body);font-size:13px;font-weight:600;cursor:pointer;padding:10px 16px;transition:all .2s;white-space:nowrap}
+.btn-fire{background:var(--fire);color:#fff}.btn-fire:hover{background:var(--fire2)}
+.btn-ghost{background:var(--s3);color:var(--text);border:1px solid var(--border)}.btn-ghost:hover{border-color:var(--fire);color:var(--fire)}
+.btn-green{background:var(--green);color:#000}.btn-green:hover{opacity:.85}
+.btn-blue{background:var(--blue);color:#000}.btn-blue:hover{opacity:.85}
+.btn-full{width:100%}.btn-sm{font-size:12px;padding:7px 12px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:12px;padding:20px}
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;padding:4px 10px;border-radius:4px}
+input,select,textarea{width:100%;background:var(--s3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--body);font-size:14px;padding:10px 13px;outline:none;transition:border .2s;margin-bottom:10px}
+input:focus,select:focus,textarea:focus{border-color:var(--fire)}
+label{font-size:12px;color:var(--muted2);font-weight:500;display:block;margin-bottom:4px}
+
+/* ── HEADER ── */
+.header{background:var(--s1);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+.logo{display:flex;align-items:center;gap:10px}
+.logo-mark{width:32px;height:32px;border-radius:7px;overflow:hidden;background:var(--fire)}
+.logo-mark img{width:100%;height:100%;object-fit:cover;object-position:top}
+.logo-text .main{font-family:var(--display);font-size:18px;letter-spacing:.06em}
+.logo-text .sub{font-size:9px;color:var(--fire);font-weight:600;letter-spacing:.18em;text-transform:uppercase}
+.header-badge{font-size:11px;color:var(--blue);background:#0A1530;border:1px solid #1A3060;border-radius:20px;padding:4px 12px;font-weight:600}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:2px;background:var(--s2);border-radius:10px;padding:3px;margin:20px}
+.tab{flex:1;text-align:center;background:none;border:none;color:var(--muted);font-family:var(--body);font-size:12px;font-weight:600;padding:8px;border-radius:8px;cursor:pointer;transition:all .2s}
+.tab.active{background:var(--fire);color:#fff}
+
+.body{padding:0 20px 40px}
+
+/* ── SECTION TITLES ── */
+.section-title{font-family:var(--display);font-size:22px;letter-spacing:.04em;margin-bottom:4px}
+.section-sub{font-size:13px;color:var(--muted2);margin-bottom:20px;line-height:1.5}
+
+/* ── CAMERA ── */
+.camera-wrap{position:relative;background:#000;border-radius:14px;overflow:hidden;aspect-ratio:3/4;max-height:60vh;margin-bottom:14px;border:2px solid var(--border)}
+#videoEl{width:100%;height:100%;object-fit:cover;display:block}
+#canvasEl{position:absolute;top:0;left:0;width:100%;height:100%}
+#photoEl{width:100%;height:100%;object-fit:cover;display:none}
+.camera-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(0,0,0,.7);cursor:pointer}
+.camera-overlay.hidden{display:none}
+.camera-overlay-icon{font-size:48px}
+.camera-overlay-text{font-size:14px;color:var(--muted2)}
+
+/* Grid lines on camera */
+.grid-overlay{position:absolute;inset:0;pointer-events:none;opacity:.2}
+
+/* Angle display */
+.angle-badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.angle-badge{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;flex:1;min-width:80px}
+.angle-badge .av{font-family:var(--mono);font-size:18px;font-weight:700}
+.angle-badge .al{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+
+/* ── TESTS ── */
+.test-grid{display:flex;flex-direction:column;gap:12px}
+.test-card{background:var(--s1);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border .2s}
+.test-card.done{border-color:var(--green)}
+.test-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.test-num{width:32px;height:32px;border-radius:8px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;color:var(--muted);flex-shrink:0;border:1px solid var(--border)}
+.test-card.done .test-num{background:var(--green);color:#000;border-color:var(--green)}
+.test-info{flex:1}
+.test-name{font-size:14px;font-weight:600;margin-bottom:2px}
+.test-desc{font-size:11px;color:var(--muted2)}
+.test-score-display{font-family:var(--display);font-size:22px;color:var(--muted);letter-spacing:.04em;flex-shrink:0}
+.test-card.done .test-score-display{color:var(--green)}
+.test-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border)}
+.test-body.open{display:block}
+
+/* Score selector */
+.score-btns{display:flex;gap:8px;margin:12px 0}
+.score-btn{flex:1;padding:12px 8px;background:var(--s2);border:2px solid var(--border);border-radius:10px;cursor:pointer;text-align:center;transition:all .2s}
+.score-btn:hover{border-color:var(--fire)}
+.score-btn.sel-1{border-color:#FF4444;background:#1A0505}
+.score-btn.sel-2{border-color:#F59E0B;background:#1A1000}
+.score-btn.sel-3{border-color:var(--green);background:#001A0E}
+.score-btn .si{font-size:24px;margin-bottom:4px}
+.score-btn .sv{font-family:var(--display);font-size:20px}
+.score-btn .sl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+
+/* Video record */
+.record-btn{position:relative;display:flex;align-items:center;justify-content:center;gap:8px}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:#FF4444;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* ── POSTURE ANNOTATOR ── */
+.annotator-wrap{position:relative;border-radius:12px;overflow:hidden;background:#000;border:1px solid var(--border);margin-bottom:12px}
+#annotCanvas{display:block;width:100%;cursor:crosshair}
+.draw-tools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.draw-tool{background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:11px;cursor:pointer;transition:all .2s;color:var(--muted2)}
+.draw-tool.active{border-color:var(--fire);color:var(--fire);background:#1A0A00}
+.color-dots{display:flex;gap:6px;align-items:center}
+.color-dot{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all .2s}
+.color-dot.active{border-color:#fff;transform:scale(1.2)}
+
+/* ── RESULTS ── */
+.result-summary{background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:14px;padding:20px;margin-bottom:16px}
+.result-score-big{font-family:var(--display);font-size:64px;letter-spacing:.04em;line-height:1}
+.result-bars{display:flex;flex-direction:column;gap:8px;margin:16px 0}
+.result-bar-row{display:flex;align-items:center;gap:10px}
+.result-bar-lbl{font-size:12px;color:var(--muted2);width:130px;flex-shrink:0}
+.result-bar-track{flex:1;height:6px;background:var(--s2);border-radius:3px;overflow:hidden}
+.result-bar-fill{height:100%;border-radius:3px;transition:width .6s ease}
+.result-bar-num{font-size:12px;font-family:var(--mono);width:24px;text-align:right;flex-shrink:0}
+
+/* ── SHARE CARD ── */
+.share-card{background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:16px;margin-top:14px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--s2);border:1px solid var(--fire);border-radius:8px;padding:10px 18px;font-size:13px;color:var(--fire2);opacity:0;transition:all .3s;z-index:9999;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── MEDIAPIPE STATUS ── */
+.mp-status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:10px}
+.mp-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.mp-dot.ready{background:var(--green);animation:pulse 2s infinite}
+.mp-dot.loading{background:#F59E0B;animation:blink 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+@media(max-width:480px){.tabs{margin:14px}.body{padding:0 14px 40px}}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-mark">
+      <img id="logoImg" src="" alt="B">
+    </div>
+    <div class="logo-text">
+      <div class="main">BEKİR COACH</div>
+      <div class="sub">Postür & Mobilite</div>
+    </div>
+  </div>
+  <div class="header-badge">🔬 Analiz Modülü</div>
+</header>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('camera')">📸 Kamera</button>
+  <button class="tab" onclick="switchTab('tests')">🏃 Mobilite</button>
+  <button class="tab" onclick="switchTab('annotate')">✏️ Analiz</button>
+  <button class="tab" onclick="switchTab('results')">📊 Rapor</button>
+</div>
+
+<div class="body">
+
+  <!-- ═══ TAB: CAMERA ═══ -->
+  <div id="tab-camera">
+    <div class="section-title">Postür <span style="color:var(--fire)">Kamerası</span></div>
+    <div class="section-sub">Kamerayı aç, üye pozisyon alsın. MediaPipe ile iskelet noktaları ve açılar otomatik ölçülür.</div>
+
+    <!-- MediaPipe status -->
+    <div class="mp-status">
+      <div class="mp-dot" id="mpDot"></div>
+      <span id="mpStatus">MediaPipe yükleniyor...</span>
+    </div>
+
+    <!-- Camera -->
+    <div class="camera-wrap" id="cameraWrap">
+      <video id="videoEl" autoplay playsinline muted></video>
+      <canvas id="canvasEl"></canvas>
+      <img id="photoEl" alt="Çekilen fotoğraf">
+      <div class="camera-overlay" id="cameraOverlay" onclick="startCamera()">
+        <div class="camera-overlay-icon">📷</div>
+        <div class="camera-overlay-text">Kamerayı Başlat</div>
+      </div>
+    </div>
+
+    <!-- Angle badges -->
+    <div class="angle-badges">
+      <div class="angle-badge">
+        <div class="av" id="angleShoulderL" style="color:var(--blue)">—°</div>
+        <div class="al">Sol Omuz</div>
+      </div>
+      <div class="angle-badge">
+        <div class="av" id="angleShoulderR" style="color:var(--blue)">—°</div>
+        <div class="al">Sağ Omuz</div>
+      </div>
+      <div class="angle-badge">
+        <div class="av" id="angleHip" style="color:var(--purple)">—°</div>
+        <div class="al">Kalça</div>
+      </div>
+      <div class="angle-badge">
+        <div class="av" id="angleKneeL" style="color:var(--green)">—°</div>
+        <div class="al">Sol Diz</div>
+      </div>
+      <div class="angle-badge">
+        <div class="av" id="angleKneeR" style="color:var(--green)">—°</div>
+        <div class="al">Sağ Diz</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+      <button class="btn btn-fire" onclick="capturePhoto()">📸 Fotoğraf Çek</button>
+      <button class="btn btn-ghost" id="switchCamBtn" onclick="switchCamera()">🔄 Kamera Değiştir</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px" id="afterCaptureBtns" style="display:none">
+      <button class="btn btn-green" onclick="useForAnnotation()">✏️ Analiz Et</button>
+      <button class="btn btn-ghost" onclick="retakePhoto()">🔄 Tekrar Çek</button>
+    </div>
+
+    <!-- Member info -->
+    <div class="card">
+      <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Üye Bilgileri</div>
+      <label>Üye Adı</label>
+      <input type="text" id="memberNameP" placeholder="Ahmet Yılmaz">
+      <label>Analiz Tarihi</label>
+      <input type="text" id="analysisDate" readonly>
+      <label>Notlar</label>
+      <textarea id="cameraNote" rows="2" placeholder="Gözlemler, dikkat çeken noktalar..."></textarea>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: MOBILITY TESTS ═══ -->
+  <div id="tab-tests" style="display:none">
+    <div class="section-title">Mobilite <span style="color:var(--green)">Testleri</span></div>
+    <div class="section-sub">Her testi üyeye uygula, performansı 1-3 arası skorla. Kamera ile video kaydedebilirsin.</div>
+
+    <div class="test-grid" id="testGrid"></div>
+
+    <div style="margin-top:20px">
+      <button class="btn btn-fire btn-full" onclick="calcMobilityScore()">📊 Mobilite Skorunu Hesapla</button>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: ANNOTATE ═══ -->
+  <div id="tab-annotate" style="display:none">
+    <div class="section-title">Postür <span style="color:var(--purple)">Analizi</span></div>
+    <div class="section-sub">Fotoğraf üzerine çizim yap, açıları işaretle, notlar ekle.</div>
+
+    <!-- Upload or use camera photo -->
+    <div id="annotNoPhoto" class="card" style="text-align:center;padding:30px;margin-bottom:14px">
+      <div style="font-size:36px;margin-bottom:10px">🖼️</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">Fotoğraf Seç</div>
+      <div style="font-size:12px;color:var(--muted2);margin-bottom:16px">Kameradan çektiğin fotoğrafı kullan veya galeriden yükle</div>
+      <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+        <button class="btn btn-fire btn-sm" onclick="useCameraPhoto()">📸 Kamera Fotoğrafını Kullan</button>
+        <label class="btn btn-ghost btn-sm" style="cursor:pointer">📁 Galeriden Yükle<input type="file" accept="image/*" style="display:none;margin:0;padding:0;background:none;border:none" onchange="loadImageFile(this)"></label>
+      </div>
+    </div>
+
+    <div id="annotatorUI" style="display:none">
+      <!-- Drawing tools -->
+      <div class="draw-tools">
+        <button class="draw-tool active" id="tool-line" onclick="setTool('line')">📏 Çizgi</button>
+        <button class="draw-tool" id="tool-angle" onclick="setTool('angle')">📐 Açı</button>
+        <button class="draw-tool" id="tool-arrow" onclick="setTool('arrow')">➡️ Ok</button>
+        <button class="draw-tool" id="tool-circle" onclick="setTool('circle')">⭕ Daire</button>
+        <button class="draw-tool" id="tool-text" onclick="setTool('text')">🔤 Metin</button>
+        <button class="draw-tool" id="tool-erase" onclick="setTool('erase')">🗑️ Sil</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+        <div class="color-dots">
+          <span style="font-size:11px;color:var(--muted);margin-right:4px">Renk:</span>
+          <div class="color-dot active" style="background:#FF5C00" onclick="setColor('#FF5C00',this)"></div>
+          <div class="color-dot" style="background:#3DDB85" onclick="setColor('#3DDB85',this)"></div>
+          <div class="color-dot" style="background:#60A5FA" onclick="setColor('#60A5FA',this)"></div>
+          <div class="color-dot" style="background:#F59E0B" onclick="setColor('#F59E0B',this)"></div>
+          <div class="color-dot" style="background:#FF4444" onclick="setColor('#FF4444',this)"></div>
+          <div class="color-dot" style="background:#fff" onclick="setColor('#fff',this)"></div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="undoAnnot()">↩ Geri Al</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearAnnot()">🗑 Temizle</button>
+        </div>
+      </div>
+
+      <!-- Canvas -->
+      <div class="annotator-wrap">
+        <canvas id="annotCanvas"></canvas>
+      </div>
+
+      <!-- Angle measurement result -->
+      <div id="angleResult" style="display:none;background:#1A0A00;border:1px solid #3A1800;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:var(--fire2)">
+        📐 Ölçülen Açı: <strong id="measuredAngle" style="font-family:var(--mono);font-size:16px">—°</strong>
+      </div>
+
+      <!-- Posture findings -->
+      <div class="card" style="margin-bottom:12px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Postür Bulguları</div>
+        <div style="display:flex;flex-direction:column;gap:8px" id="findingsList">
+          <div style="display:flex;align-items:center;gap:8px">
+            <select id="findingSelect" style="flex:1;margin:0;font-size:12px">
+              <option>Baş ileri pozisyonu</option>
+              <option>Sol omuz yüksek</option>
+              <option>Sağ omuz yüksek</option>
+              <option>Kifoz (kamburluk)</option>
+              <option>Lordoz (bel çukuru)</option>
+              <option>Sol diz valgus</option>
+              <option>Sağ diz valgus</option>
+              <option>Pelvik tilt (öne)</option>
+              <option>Pelvik tilt (arkaya)</option>
+              <option>Pronasyon (sol ayak)</option>
+              <option>Pronasyon (sağ ayak)</option>
+              <option>Skolyoz şüphesi</option>
+              <option>Diğer...</option>
+            </select>
+            <select id="findingSeverity" style="width:100px;margin:0;font-size:12px">
+              <option value="mild">Hafif</option>
+              <option value="moderate">Orta</option>
+              <option value="severe">Ciddi</option>
+            </select>
+            <button class="btn btn-fire btn-sm" onclick="addFinding()">+</button>
+          </div>
+        </div>
+        <div id="findingsAdded" style="margin-top:10px;display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+
+      <!-- Export -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button class="btn btn-fire" onclick="saveAnnotation()">💾 Analizi Kaydet</button>
+        <button class="btn btn-ghost" onclick="exportAnnotation()">📤 Dışa Aktar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TAB: RESULTS ═══ -->
+  <div id="tab-results" style="display:none">
+    <div class="section-title">Analiz <span style="color:var(--fire)">Raporu</span></div>
+    <div class="section-sub">Tüm testlerin özeti ve öneriler</div>
+
+    <div id="noResults" class="card" style="text-align:center;padding:40px">
+      <div style="font-size:36px;margin-bottom:10px">📋</div>
+      <div style="font-size:14px;color:var(--muted2)">Mobilite testlerini tamamla ve kamera analizi yap, sonuçlar burada görünecek.</div>
+    </div>
+
+    <div id="resultsContent" style="display:none">
+      <!-- Overall score -->
+      <div class="result-summary">
+        <div style="font-size:11px;color:var(--blue);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px">Genel Mobilite Skoru</div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:8px">
+          <div class="result-score-big" id="totalScoreDisplay">—</div>
+          <div style="font-family:var(--display);font-size:28px;color:var(--muted)">/21</div>
+        </div>
+        <div style="font-size:14px;font-weight:600" id="scoreLabel">—</div>
+        <div style="font-size:12px;color:var(--muted2);margin-top:4px" id="scoreSub">—</div>
+      </div>
+
+      <!-- Per-test bars -->
+      <div class="card" style="margin-bottom:14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px">Test Detayları</div>
+        <div class="result-bars" id="resultBars"></div>
+      </div>
+
+      <!-- Postür findings -->
+      <div class="card" style="margin-bottom:14px" id="postureFindings" style="display:none">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Postür Bulguları</div>
+        <div id="postureList"></div>
+      </div>
+
+      <!-- Recommendations -->
+      <div class="card" style="margin-bottom:14px;background:linear-gradient(135deg,#0F0A05,#080A0C);border-color:#2E1A08">
+        <div style="font-size:10px;color:var(--fire);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">🔥 Bekir Coach Önerileri</div>
+        <div id="recommendations" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+
+      <!-- Annotated photo -->
+      <div class="card" id="annotatedPhotoCard" style="display:none;margin-bottom:14px">
+        <div style="font-size:10px;color:var(--muted);font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Postür Analiz Fotoğrafı</div>
+        <img id="finalAnnotPhoto" style="width:100%;border-radius:8px" alt="">
+      </div>
+
+      <!-- Share -->
+      <div class="share-card">
+        <div style="font-size:13px;font-weight:600;margin-bottom:10px">📤 Raporu Paylaş</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+          <button class="btn btn-green btn-sm" onclick="shareReport()">💾 PDF İndir</button>
+          <button class="btn btn-ghost btn-sm" onclick="newAnalysis()">🔄 Yeni Analiz</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /body -->
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+<script>
+/* ═══════════════════════════════════
+   STATE
+═══════════════════════════════════ */
+let pose = null;
+let camera = null;
+let cameraStream = null;
+let facingMode = 'environment';
+let capturedPhoto = null;
+let annotImage = null;
+let currentTool = 'line';
+let currentColor = '#FF5C00';
+let isDrawing = false;
+let startX, startY;
+let annotations = [];
+let findings = [];
+let mobilityScores = {};
+let mpReady = false;
+let videoRecorder = null;
+let recordedChunks = [];
+let activeTestId = null;
+
+/* ═══════════════════════════════════
+   MOBILITY TESTS DATA
+═══════════════════════════════════ */
+const TESTS = [
+  {
+    id: 'overhead_squat',
+    name: 'Overhead Squat',
+    desc: 'Kollar yukarda, tam squat',
+    emoji: '🏋️',
+    instructions: 'Ayaklar omuz genişliğinde, kollar kulak hizasında uzatılmış. Topuklar yerden kalkmadan tam squat yap.',
+    criteria: ['3 — Mükemmel: Tam depth, diz parmak ucunu geçiyor, gövde dik', '2 — Orta: Hafif topuk kalkması veya gövde öne eğilme', '1 — Zayıf: Belirgin kompansasyon, ağrı veya kısıtlılık'],
+    targetArea: 'Kalça, omuz, ayak bileği mobilitesi'
+  },
+  {
+    id: 'single_leg_squat',
+    name: 'Single Leg Squat',
+    desc: 'Tek bacak squat (her iki bacak)',
+    emoji: '🦵',
+    instructions: 'Tek bacak üzerinde dur. Diğer bacak öne uzat. Yavaşça squat yap. Her bacak için ayrı skorla.',
+    criteria: ['3 — Mükemmel: Pelvis dengeli, diz ikinci parmak hizasında', '2 — Orta: Hafif pelvik düşme veya diz içe kayma', '1 — Zayıf: Belirgin pelvik düşme, diz valgus, denge kaybı'],
+    targetArea: 'Kalça stabilitesi, diz hizası'
+  },
+  {
+    id: 'toe_touch',
+    name: 'Toe Touch',
+    desc: 'Ayak parmağına dokunma',
+    emoji: '🤸',
+    instructions: 'Ayaklar bitişik, dizler düz. Öne eğil, parmaklarla zemine ulaşmaya çalış.',
+    criteria: ['3 — Mükemmel: Parmaklar zemine değiyor', '2 — Orta: Parmaklar topuk hizasında (5-10 cm)', '1 — Zayıf: Topukların üzerinde kalmıyor'],
+    targetArea: 'Hamstring, lumbar fleksibilite'
+  },
+  {
+    id: 'shoulder_mobility',
+    name: 'Omuz Mobilitesi',
+    desc: 'El arkası temas testi',
+    emoji: '🙆',
+    instructions: 'Bir el başın üstünden omza inerken diğer el belden omza çıkar. İki el arasındaki mesafeyi ölç.',
+    criteria: ['3 — Mükemmel: Eller birbirine değiyor veya üst üste', '2 — Orta: 1-2 el genişliği mesafe', '1 — Zayıf: 2+ el genişliği mesafe'],
+    targetArea: 'Omuz iç/dış rotasyon'
+  },
+  {
+    id: 'active_slr',
+    name: 'Active SLR',
+    desc: 'Aktif düz bacak kaldırma',
+    emoji: '🦿',
+    instructions: 'Sırt üstü yat. Bir bacağı diz bükmeden yukarı kaldır. Diğer bacak yerde sabit.',
+    criteria: ['3 — Mükemmel: 70°+ fleksiyon, pelvis sabit', '2 — Orta: 50-70° arası veya hafif pelvik kayma', '1 — Zayıf: 50° altı veya belirgin kompansasyon'],
+    targetArea: 'Hamstring fleksibilite, core stabilite'
+  },
+  {
+    id: 'rotary_stability',
+    name: 'Rotary Stabilite',
+    desc: 'Dörtayak karşılıklı uzatma',
+    emoji: '⚖️',
+    instructions: 'Dörtayak pozisyonunda. Aynı taraf kol ve bacağı uzat (homolateral). Sırt düz kalmalı.',
+    criteria: ['3 — Mükemmel: Düzgün pattern, denge tam', '2 — Orta: Hafif rotasyon veya denge kaybı', '1 — Zayıf: Belirgin compensasyon, kontralateral pattern kullanımı'],
+    targetArea: 'Core stabilite, koordinasyon'
+  },
+  {
+    id: 'inline_lunge',
+    name: 'Inline Lunge',
+    desc: 'Çizgi üzerinde öne adım',
+    emoji: '🚶',
+    instructions: 'Bir çizgi üzerinde dur. Öne hamle yap, arka diz yere değsin. Kollar karşılıklı pozisyonda.',
+    criteria: ['3 — Mükemmel: Dengeli, gövde dik, diz dışa ayrılmıyor', '2 — Orta: Hafif gövde hareketi veya diz kayması', '1 — Zayıf: Belirgin denge kaybı veya ağrı'],
+    targetArea: 'Kalça fleksörleri, lateral stabilite'
+  }
+];
+
+/* ═══════════════════════════════════
+   INIT
+═══════════════════════════════════ */
+document.getElementById('analysisDate').value = new Date().toLocaleDateString('tr-TR', {day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+
+// Set logo
+const logoImg = document.getElementById('logoImg');
+const savedPhoto = localStorage.getItem('bc_coach_photo');
+if (savedPhoto) logoImg.src = savedPhoto;
+
+renderTests();
+initMediaPipe();
+
+/* ═══════════════════════════════════
+   TABS
+═══════════════════════════════════ */
+function switchTab(t) {
+  ['camera','tests','annotate','results'].forEach(id => {
+    document.getElementById('tab-'+id).style.display = id===t?'block':'none';
+  });
+  document.querySelectorAll('.tab').forEach((b,i)=>b.classList.toggle('active',['camera','tests','annotate','results'][i]===t));
+}
+
+/* ═══════════════════════════════════
+   MEDIAPIPE POSE
+═══════════════════════════════════ */
+function initMediaPipe() {
+  const dot = document.getElementById('mpDot');
+  const status = document.getElementById('mpStatus');
+  dot.className = 'mp-dot loading';
+  status.textContent = 'MediaPipe yükleniyor...';
+
+  try {
+    pose = new Pose({
+      locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+    });
+    pose.setOptions({
+      modelComplexity: 1,
+      smoothLandmarks: true,
+      enableSegmentation: false,
+      minDetectionConfidence: 0.5,
+      minTrackingConfidence: 0.5
+    });
+    pose.onResults(onPoseResults);
+    pose.initialize().then(() => {
+      mpReady = true;
+      dot.className = 'mp-dot ready';
+      status.textContent = 'MediaPipe hazır — iskelet tespiti aktif';
+    }).catch(e => {
+      dot.className = 'mp-dot';
+      status.textContent = 'MediaPipe yüklenemedi — temel mod aktif';
+    });
+  } catch(e) {
+    dot.className = 'mp-dot';
+    status.textContent = 'MediaPipe desteklenmiyor — temel mod aktif';
+  }
+}
+
+function onPoseResults(results) {
+  const canvas = document.getElementById('canvasEl');
+  const video = document.getElementById('videoEl');
+  if (!canvas || !video) return;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (results.poseLandmarks) {
+    // Draw connections
+    drawConnectors(ctx, results.poseLandmarks, POSE_CONNECTIONS, {color:'rgba(255,92,0,.6)', lineWidth:2});
+    // Draw landmarks
+    drawLandmarks(ctx, results.poseLandmarks, {color:'#FF5C00', lineWidth:1, radius:3});
+    // Calculate angles
+    calcAngles(results.poseLandmarks, canvas.width, canvas.height);
+  }
+}
+
+function calcAngles(lm, w, h) {
+  if (!lm || lm.length < 33) return;
+  // Shoulder tilt
+  const lShoulder = lm[11], rShoulder = lm[12];
+  const shoulderAngleL = Math.abs(Math.atan2((rShoulder.y-lShoulder.y)*h, (rShoulder.x-lShoulder.x)*w) * 180/Math.PI);
+  const shoulderAngleR = 180 - shoulderAngleL;
+
+  // Hip
+  const lHip = lm[23], rHip = lm[24];
+  const hipAngle = Math.abs(Math.atan2((rHip.y-lHip.y)*h, (rHip.x-lHip.x)*w) * 180/Math.PI);
+
+  // Knee angles
+  const lKneeAngle = calcJointAngle(lm[23], lm[25], lm[27], w, h);
+  const rKneeAngle = calcJointAngle(lm[24], lm[26], lm[28], w, h);
+
+  const set = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = Math.round(val) + '°';
+  };
+  set('angleShoulderL', shoulderAngleL);
+  set('angleShoulderR', shoulderAngleR);
+  set('angleHip', hipAngle);
+  set('angleKneeL', lKneeAngle);
+  set('angleKneeR', rKneeAngle);
+}
+
+function calcJointAngle(a, b, c, w, h) {
+  const ax = a.x*w, ay = a.y*h;
+  const bx = b.x*w, by = b.y*h;
+  const cx = c.x*w, cy = c.y*h;
+  const v1 = {x:ax-bx, y:ay-by};
+  const v2 = {x:cx-bx, y:cy-by};
+  const dot = v1.x*v2.x + v1.y*v2.y;
+  const mag = Math.sqrt(v1.x**2+v1.y**2) * Math.sqrt(v2.x**2+v2.y**2);
+  return mag ? Math.acos(Math.min(1, Math.max(-1, dot/mag))) * 180/Math.PI : 0;
+}
+
+/* ═══════════════════════════════════
+   CAMERA
+═══════════════════════════════════ */
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode, width:{ideal:1280}, height:{ideal:960} },
+      audio: false
+    });
+    cameraStream = stream;
+    const video = document.getElementById('videoEl');
+    video.srcObject = stream;
+    document.getElementById('cameraOverlay').classList.add('hidden');
+
+    // Start MediaPipe camera
+    if (mpReady && pose) {
+      camera = new Camera(video, {
+        onFrame: async () => { await pose.send({image: video}); },
+        width: 1280, height: 960
+      });
+      camera.start();
+    }
+    toast('📷 Kamera açıldı!');
+  } catch(e) {
+    toast('❌ Kamera erişimi reddedildi');
+    document.getElementById('mpStatus').textContent = 'Kamera erişimi gerekli';
+  }
+}
+
+function switchCamera() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  if (cameraStream) { cameraStream.getTracks().forEach(t=>t.stop()); }
+  if (camera) camera.stop();
+  startCamera();
+}
+
+function capturePhoto() {
+  const video = document.getElementById('videoEl');
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth || 640;
+  canvas.height = video.videoHeight || 480;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  capturedPhoto = canvas.toDataURL('image/jpeg', 0.92);
+
+  const photoEl = document.getElementById('photoEl');
+  photoEl.src = capturedPhoto;
+  photoEl.style.display = 'block';
+  video.style.display = 'none';
+  document.getElementById('canvasEl').style.display = 'none';
+
+  document.getElementById('afterCaptureBtns').style.display = 'grid';
+  toast('✅ Fotoğraf çekildi!');
+}
+
+function retakePhoto() {
+  const video = document.getElementById('videoEl');
+  video.style.display = 'block';
+  document.getElementById('canvasEl').style.display = 'block';
+  document.getElementById('photoEl').style.display = 'none';
+  document.getElementById('afterCaptureBtns').style.display = 'none';
+  capturedPhoto = null;
+}
+
+function useForAnnotation() {
+  if (!capturedPhoto) { toast('Önce fotoğraf çek!'); return; }
+  loadAnnotationImage(capturedPhoto);
+  switchTab('annotate');
+}
+
+/* ═══════════════════════════════════
+   MOBILITY TESTS
+═══════════════════════════════════ */
+function renderTests() {
+  const grid = document.getElementById('testGrid');
+  grid.innerHTML = TESTS.map((t,i) => `
+    <div class="test-card${mobilityScores[t.id]?' done':''}" id="tc_${t.id}">
+      <div class="test-header" onclick="toggleTest('${t.id}')">
+        <div class="test-num">${mobilityScores[t.id]||i+1}</div>
+        <div class="test-info">
+          <div class="test-name">${t.emoji} ${t.name}</div>
+          <div class="test-desc">${t.desc}</div>
+        </div>
+        <div class="test-score-display">${mobilityScores[t.id]?mobilityScores[t.id]+'/3':'—'}</div>
+      </div>
+      <div class="test-body" id="tb_${t.id}">
+        <div style="font-size:12px;color:var(--muted2);line-height:1.6;margin-bottom:10px;padding:10px;background:var(--s2);border-radius:8px">
+          📋 ${t.instructions}
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;text-transform:uppercase;letter-spacing:.06em">Hedef Bölge: ${t.targetArea}</div>
+        <div class="score-btns">
+          <div class="score-btn${mobilityScores[t.id]===1?' sel-1':''}" onclick="scoreTest('${t.id}',1)">
+            <div class="si">😟</div><div class="sv" style="color:#FF4444">1</div><div class="sl">Zayıf</div>
+          </div>
+          <div class="score-btn${mobilityScores[t.id]===2?' sel-2':''}" onclick="scoreTest('${t.id}',2)">
+            <div class="si">😐</div><div class="sv" style="color:#F59E0B">2</div><div class="sl">Orta</div>
+          </div>
+          <div class="score-btn${mobilityScores[t.id]===3?' sel-3':''}" onclick="scoreTest('${t.id}',3)">
+            <div class="si">💪</div><div class="sv" style="color:var(--green)">3</div><div class="sl">İyi</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted2);line-height:1.7;padding:10px;background:var(--s3);border-radius:8px">
+          ${t.criteria.map(c=>'• '+c).join('<br>')}
+        </div>
+        <!-- Video record -->
+        <div style="margin-top:10px;display:flex;gap:8px">
+          <button class="btn btn-ghost btn-sm record-btn" id="recBtn_${t.id}" onclick="toggleRecord('${t.id}')">
+            🎥 Video Kaydet
+          </button>
+          <label class="btn btn-ghost btn-sm" style="cursor:pointer">📁 Video Yükle<input type="file" accept="video/*" style="display:none;margin:0;padding:0;background:none;border:none" onchange="loadTestVideo(this,'${t.id}')"></label>
+        </div>
+        <div id="videoPreview_${t.id}" style="display:none;margin-top:8px">
+          <video id="testVideo_${t.id}" controls style="width:100%;border-radius:8px;background:#000;margin:0"></video>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleTest(id) {
+  const body = document.getElementById('tb_'+id);
+  body.classList.toggle('open');
+}
+
+function scoreTest(id, score) {
+  mobilityScores[id] = score;
+  renderTests();
+  // Re-open the toggled test
+  setTimeout(() => {
+    const body = document.getElementById('tb_'+id);
+    if (body) body.classList.add('open');
+  }, 50);
+  toast(`✅ ${TESTS.find(t=>t.id===id).name}: ${score}/3`);
+}
+
+async function toggleRecord(testId) {
+  const btn = document.getElementById('recBtn_'+testId);
+  if (!videoRecorder || videoRecorder.state === 'inactive') {
+    try {
+      const stream = cameraStream || await navigator.mediaDevices.getUserMedia({video:true,audio:false});
+      recordedChunks = [];
+      videoRecorder = new MediaRecorder(stream);
+      videoRecorder.ondataavailable = e => { if(e.data.size>0) recordedChunks.push(e.data); };
+      videoRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, {type:'video/webm'});
+        const url = URL.createObjectURL(blob);
+        const vEl = document.getElementById('testVideo_'+testId);
+        const wrap = document.getElementById('videoPreview_'+testId);
+        if (vEl) { vEl.src = url; }
+        if (wrap) wrap.style.display = 'block';
+        toast('✅ Video kaydedildi!');
+      };
+      videoRecorder.start();
+      activeTestId = testId;
+      btn.innerHTML = '<span class="rec-dot"></span> Durdur';
+      btn.style.borderColor = '#FF4444';
+      btn.style.color = '#FF4444';
+    } catch(e) { toast('❌ Kamera erişimi gerekli'); }
+  } else {
+    videoRecorder.stop();
+    videoRecorder = null;
+    btn.innerHTML = '🎥 Video Kaydet';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+function loadTestVideo(input, testId) {
+  const file = input.files[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  const vEl = document.getElementById('testVideo_'+testId);
+  const wrap = document.getElementById('videoPreview_'+testId);
+  if (vEl) { vEl.src = url; }
+  if (wrap) wrap.style.display = 'block';
+  toast('✅ Video yüklendi!');
+}
+
+function calcMobilityScore() {
+  const scores = Object.values(mobilityScores);
+  if (scores.length === 0) { toast('En az 1 test skorla!'); return; }
+  const total = scores.reduce((a,b)=>a+b, 0);
+  showResults(total);
+  switchTab('results');
+}
+
+/* ═══════════════════════════════════
+   ANNOTATION
+═══════════════════════════════════ */
+function loadAnnotationImage(src) {
+  annotImage = new Image();
+  annotImage.onload = () => {
+    const canvas = document.getElementById('annotCanvas');
+    const maxW = Math.min(window.innerWidth - 40, 640);
+    const ratio = annotImage.height / annotImage.width;
+    canvas.width = maxW;
+    canvas.height = maxW * ratio;
+    redrawAnnot();
+    document.getElementById('annotNoPhoto').style.display = 'none';
+    document.getElementById('annotatorUI').style.display = 'block';
+  };
+  annotImage.src = src;
+}
+
+function useCameraPhoto() {
+  if (!capturedPhoto) { toast('Önce kamera sekmesinden fotoğraf çek!'); return; }
+  loadAnnotationImage(capturedPhoto);
+}
+
+function loadImageFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => loadAnnotationImage(e.target.result);
+  reader.readAsDataURL(file);
+}
+
+function redrawAnnot() {
+  const canvas = document.getElementById('annotCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (annotImage) ctx.drawImage(annotImage, 0, 0, canvas.width, canvas.height);
+  annotations.forEach(a => drawAnnotation(ctx, a));
+}
+
+function setTool(t) {
+  currentTool = t;
+  document.querySelectorAll('.draw-tool').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('tool-'+t);
+  if (btn) btn.classList.add('active');
+}
+
+function setColor(c, el) {
+  currentColor = c;
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// Canvas drawing events
+const annotCanvas = document.getElementById('annotCanvas');
+let anglePoints = [];
+
+function getPos(e) {
+  const rect = annotCanvas.getBoundingClientRect();
+  const scaleX = annotCanvas.width / rect.width;
+  const scaleY = annotCanvas.height / rect.height;
+  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+  const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+  return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+}
+
+annotCanvas.addEventListener('mousedown', startDraw);
+annotCanvas.addEventListener('mousemove', moveDraw);
+annotCanvas.addEventListener('mouseup', endDraw);
+annotCanvas.addEventListener('touchstart', e=>{e.preventDefault();startDraw(e)}, {passive:false});
+annotCanvas.addEventListener('touchmove', e=>{e.preventDefault();moveDraw(e)}, {passive:false});
+annotCanvas.addEventListener('touchend', e=>{e.preventDefault();endDraw(e)}, {passive:false});
+
+function startDraw(e) {
+  const pos = getPos(e);
+  if (currentTool === 'angle') {
+    anglePoints.push(pos);
+    if (anglePoints.length === 3) {
+      const angle = calcAngleBetween(anglePoints[0], anglePoints[1], anglePoints[2]);
+      annotations.push({type:'angle', points:[...anglePoints], color:currentColor, angle});
+      document.getElementById('measuredAngle').textContent = Math.round(angle) + '°';
+      document.getElementById('angleResult').style.display = 'block';
+      anglePoints = [];
+      redrawAnnot();
+    } else {
+      // Draw temp point
+      const ctx = annotCanvas.getContext('2d');
+      ctx.fillStyle = currentColor;
+      ctx.beginPath();
+      ctx.arc(pos.x, pos.y, 5, 0, Math.PI*2);
+      ctx.fill();
+    }
+    return;
+  }
+  if (currentTool === 'text') {
+    const text = prompt('Metin gir:');
+    if (text) {
+      annotations.push({type:'text', x:pos.x, y:pos.y, text, color:currentColor});
+      redrawAnnot();
+    }
+    return;
+  }
+  if (currentTool === 'erase') {
+    // Remove closest annotation
+    if (annotations.length) annotations.pop();
+    redrawAnnot();
+    return;
+  }
+  isDrawing = true;
+  startX = pos.x; startY = pos.y;
+}
+
+function moveDraw(e) {
+  if (!isDrawing) return;
+  const pos = getPos(e);
+  redrawAnnot();
+  const ctx = annotCanvas.getContext('2d');
+  ctx.strokeStyle = currentColor;
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  if (currentTool === 'line') {
+    ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(pos.x, pos.y); ctx.stroke();
+  } else if (currentTool === 'circle') {
+    const r = Math.sqrt((pos.x-startX)**2+(pos.y-startY)**2);
+    ctx.beginPath(); ctx.arc(startX, startY, r, 0, Math.PI*2); ctx.stroke();
+  } else if (currentTool === 'arrow') {
+    drawArrow(ctx, startX, startY, pos.x, pos.y, currentColor);
+  }
+}
+
+function endDraw(e) {
+  if (!isDrawing) return;
+  isDrawing = false;
+  const pos = getPos(e);
+  if (currentTool === 'line') {
+    annotations.push({type:'line', x1:startX, y1:startY, x2:pos.x, y2:pos.y, color:currentColor});
+  } else if (currentTool === 'circle') {
+    const r = Math.sqrt((pos.x-startX)**2+(pos.y-startY)**2);
+    annotations.push({type:'circle', cx:startX, cy:startY, r, color:currentColor});
+  } else if (currentTool === 'arrow') {
+    annotations.push({type:'arrow', x1:startX, y1:startY, x2:pos.x, y2:pos.y, color:currentColor});
+  }
+  redrawAnnot();
+}
+
+function drawAnnotation(ctx, a) {
+  ctx.strokeStyle = a.color; ctx.fillStyle = a.color; ctx.lineWidth = 2.5; ctx.lineCap = 'round';
+  if (a.type === 'line') {
+    ctx.beginPath(); ctx.moveTo(a.x1,a.y1); ctx.lineTo(a.x2,a.y2); ctx.stroke();
+  } else if (a.type === 'circle') {
+    ctx.beginPath(); ctx.arc(a.cx,a.cy,a.r,0,Math.PI*2); ctx.stroke();
+  } else if (a.type === 'arrow') {
+    drawArrow(ctx, a.x1, a.y1, a.x2, a.y2, a.color);
+  } else if (a.type === 'angle') {
+    ctx.beginPath(); ctx.moveTo(a.points[0].x,a.points[0].y); ctx.lineTo(a.points[1].x,a.points[1].y); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(a.points[1].x,a.points[1].y); ctx.lineTo(a.points[2].x,a.points[2].y); ctx.stroke();
+    ctx.font = 'bold 16px JetBrains Mono,monospace'; ctx.fillStyle = a.color;
+    ctx.fillText(Math.round(a.angle)+'°', a.points[1].x+8, a.points[1].y-8);
+  } else if (a.type === 'text') {
+    ctx.font = 'bold 14px Inter,sans-serif'; ctx.fillStyle = a.color;
+    ctx.fillText(a.text, a.x, a.y);
+  }
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  const angle = Math.atan2(y2-y1, x2-x1);
+  const len = 12;
+  ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2.5;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2-len*Math.cos(angle-Math.PI/7), y2-len*Math.sin(angle-Math.PI/7));
+  ctx.lineTo(x2-len*Math.cos(angle+Math.PI/7), y2-len*Math.sin(angle+Math.PI/7));
+  ctx.closePath(); ctx.fill();
+}
+
+function calcAngleBetween(a, b, c) {
+  const v1 = {x:a.x-b.x, y:a.y-b.y};
+  const v2 = {x:c.x-b.x, y:c.y-b.y};
+  const dot = v1.x*v2.x + v1.y*v2.y;
+  const mag = Math.sqrt(v1.x**2+v1.y**2) * Math.sqrt(v2.x**2+v2.y**2);
+  return mag ? Math.acos(Math.min(1,Math.max(-1,dot/mag))) * 180/Math.PI : 0;
+}
+
+function undoAnnot() { annotations.pop(); redrawAnnot(); }
+function clearAnnot() { annotations = []; redrawAnnot(); }
+
+function addFinding() {
+  const sel = document.getElementById('findingSelect');
+  const sev = document.getElementById('findingSeverity');
+  const finding = { text: sel.value, severity: sev.value };
+  findings.push(finding);
+  renderFindings();
+}
+
+function renderFindings() {
+  const el = document.getElementById('findingsAdded');
+  const sevColors = {mild:'#F59E0B', moderate:'#FF8C42', severe:'#FF4444'};
+  const sevLabels = {mild:'Hafif', moderate:'Orta', severe:'Ciddi'};
+  el.innerHTML = findings.map((f,i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--s2);border-radius:6px;padding:7px 10px">
+      <span style="width:6px;height:6px;border-radius:50%;background:${sevColors[f.severity]};flex-shrink:0"></span>
+      <span style="font-size:12px;flex:1">${f.text}</span>
+      <span style="font-size:10px;color:${sevColors[f.severity]};font-weight:600">${sevLabels[f.severity]}</span>
+      <button onclick="findings.splice(${i},1);renderFindings()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:14px">✕</button>
+    </div>`).join('');
+}
+
+function saveAnnotation() {
+  const canvas = document.getElementById('annotCanvas');
+  capturedPhoto = canvas.toDataURL('image/jpeg', 0.92);
+  toast('✅ Analiz kaydedildi!');
+}
+
+function exportAnnotation() {
+  const canvas = document.getElementById('annotCanvas');
+  const link = document.createElement('a');
+  link.download = 'postur-analizi-' + Date.now() + '.jpg';
+  link.href = canvas.toDataURL('image/jpeg', 0.92);
+  link.click();
+  toast('📤 Fotoğraf indirildi!');
+}
+
+/* ═══════════════════════════════════
+   RESULTS
+═══════════════════════════════════ */
+function showResults(total) {
+  const maxScore = TESTS.length * 3;
+  const pct = total / maxScore * 100;
+
+  document.getElementById('noResults').style.display = 'none';
+  document.getElementById('resultsContent').style.display = 'block';
+
+  // Score color
+  let color, label, sub;
+  if (pct >= 80) { color='#3DDB85'; label='Mükemmel Mobilite 🏆'; sub='Üst düzey atletik performans için hazır.'; }
+  else if (pct >= 65) { color='#60A5FA'; label='İyi Mobilite 💪'; sub='Genel performans iyi, küçük iyileştirmeler yapılabilir.'; }
+  else if (pct >= 50) { color='#F59E0B'; label='Orta Mobilite ⚡'; sub='Bazı kısıtlılıklar var, hedefli çalışma gerekiyor.'; }
+  else { color='#FF5C00'; label='Geliştirilmesi Gerekiyor 📈'; sub='Öncelikli mobilite çalışması önerilir.'; }
+
+  document.getElementById('totalScoreDisplay').textContent = total;
+  document.getElementById('totalScoreDisplay').style.color = color;
+  document.getElementById('scoreLabel').textContent = label;
+  document.getElementById('scoreSub').textContent = sub;
+
+  // Bars
+  const barsEl = document.getElementById('resultBars');
+  barsEl.innerHTML = TESTS.map(t => {
+    const s = mobilityScores[t.id] || 0;
+    const barColor = s===3?'#3DDB85':s===2?'#F59E0B':'#FF5C00';
+    return `<div class="result-bar-row">
+      <span class="result-bar-lbl">${t.emoji} ${t.name}</span>
+      <div class="result-bar-track"><div class="result-bar-fill" style="width:${s/3*100}%;background:${barColor}"></div></div>
+      <span class="result-bar-num" style="color:${barColor}">${s||'—'}</span>
+    </div>`;
+  }).join('');
+
+  // Posture findings
+  if (findings.length) {
+    document.getElementById('postureFindings').style.display = 'block';
+    const sevColors = {mild:'#F59E0B',moderate:'#FF8C42',severe:'#FF4444'};
+    const sevLabels = {mild:'Hafif',moderate:'Orta',severe:'Ciddi'};
+    document.getElementById('postureList').innerHTML = findings.map(f=>`
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+        <span style="color:${sevColors[f.severity]}">●</span>
+        <span style="flex:1">${f.text}</span>
+        <span style="font-size:11px;color:${sevColors[f.severity]};font-weight:600">${sevLabels[f.severity]}</span>
+      </div>`).join('');
+  }
+
+  // Recommendations
+  const recs = generateRecommendations(total, maxScore);
+  document.getElementById('recommendations').innerHTML = recs.map(r=>`
+    <div style="display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted2);padding:8px 0;border-bottom:1px solid var(--border)">
+      <span style="color:var(--fire);flex-shrink:0">${r.icon}</span>
+      <div><strong style="color:var(--text);display:block;margin-bottom:2px">${r.title}</strong>${r.desc}</div>
+    </div>`).join('');
+
+  // Annotated photo
+  if (capturedPhoto) {
+    document.getElementById('annotatedPhotoCard').style.display = 'block';
+    document.getElementById('finalAnnotPhoto').src = capturedPhoto;
+  }
+}
+
+function generateRecommendations(total, max) {
+  const pct = total/max*100;
+  const recs = [];
+  const scores = mobilityScores;
+
+  if ((scores['overhead_squat']||0) < 2)
+    recs.push({icon:'🦵',title:'Ayak Bileği Mobilitesi',desc:'Duvar stretchi ve calf raise çalışmaları. Günde 3×30 saniye.'});
+  if ((scores['toe_touch']||0) < 2)
+    recs.push({icon:'🤸',title:'Hamstring Fleksibilitesi',desc:'Standing hamstring stretch, PNF germe. Haftada 4-5 gün.'});
+  if ((scores['shoulder_mobility']||0) < 2)
+    recs.push({icon:'🙆',title:'Omuz Rotasyonu',desc:'Band distraction, sleeper stretch, wall slide egzersizleri.'});
+  if ((scores['rotary_stability']||0) < 2)
+    recs.push({icon:'⚖️',title:'Core Stabilite',desc:'Dead bug, bird dog, Pallof press serisi. Haftada 3 gün.'});
+  if ((scores['single_leg_squat']||0) < 2)
+    recs.push({icon:'🏃',title:'Kalça Stabilitesi',desc:'Clamshell, lateral band walk, single leg deadlift çalışmaları.'});
+
+  if (findings.some(f=>f.text.includes('Baş ileri')))
+    recs.push({icon:'🧠',title:'Baş İleri Postürü',desc:'Chin tuck egzersizleri, göğüs açma stretchleri. Ekran başında her saat.'});
+  if (findings.some(f=>f.text.includes('omuz')))
+    recs.push({icon:'🦴',title:'Omuz Dengesizliği',desc:'Rotator cuff güçlendirme, alt trapez aktivasyonu egzersizleri.'});
+  if (findings.some(f=>f.text.includes('Lordoz')))
+    recs.push({icon:'🔧',title:'Aşırı Lordoz',desc:'Kalça fleksör germe, gluteal aktivasyon ve core anti-ekstensiyon çalışmaları.'});
+
+  if (pct >= 80)
+    recs.push({icon:'🏆',title:'Performans Optimizasyonu',desc:'Mevcut mobilite seviyeni koru. Plyometrik ve güç çalışmalarına odaklan.'});
+
+  return recs.length ? recs : [{icon:'✅',title:'Genel Öneri',desc:'Mobilite çalışmalarını antrenman programına haftalık 2-3 seans ekle.'}];
+}
+
+function shareReport() {
+  // Print as PDF
+  window.print();
+}
+
+function newAnalysis() {
+  mobilityScores = {};
+  findings = [];
+  annotations = [];
+  capturedPhoto = null;
+  renderTests();
+  switchTab('camera');
+  toast('🔄 Yeni analiz başlatıldı');
+}
+
+/* ═══════════════════════════════════
+   TOAST
+═══════════════════════════════════ */
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
