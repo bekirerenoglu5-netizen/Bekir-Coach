@@ -81,6 +81,11 @@ label{font-size:12px;color:var(--muted2);font-weight:500;display:block;margin-bo
   background:var(--s1);position:sticky;top:0;z-index:100;
 }
 .bc-logo{display:flex;align-items:center;gap:10px}
+.coach-hero-tp{display:flex;flex-direction:column;align-items:center;text-align:center;padding:26px 20px;margin:0 0 20px;background:linear-gradient(135deg,#0F0A05,#080A0C);border-bottom:1px solid #2E1A08}
+.coach-hero-tp .cha{width:84px;height:84px;border-radius:18px;overflow:hidden;margin-bottom:14px;border:3px solid #2E1A08;box-shadow:0 8px 28px rgba(255,92,0,.2)}
+.coach-hero-tp .cha img{width:100%;height:100%;object-fit:cover;object-position:top}
+.coach-hero-tp .chn{font-family:var(--display);font-size:22px;letter-spacing:.05em;margin-bottom:4px}
+.coach-hero-tp .chr{font-size:11px;color:var(--fire);font-weight:600;letter-spacing:.1em;text-transform:uppercase}
 .bc-logo-mark{
   width:36px;height:36px;background:var(--fire);border-radius:8px;
   display:flex;align-items:center;justify-content:center;
@@ -638,8 +643,15 @@ input[type=range].mood-range::-moz-range-thumb{
       <button class="tp-tab" onclick="showTab('programs')">Programlarım</button>
       <button class="tp-tab" onclick="showTab('nutrition')">Beslenme</button>
       <button class="tp-tab" onclick="showTab('tracker')">📊 Takip</button>
+      <button class="tp-tab" onclick="showTab('intake')">📋 Anket</button>
     </div>
   </nav>
+
+  <div class="coach-hero-tp">
+    <div class="cha"><img id="tpHeroImg" src="" alt=""></div>
+    <div class="chn">BEKİR COACH</div>
+    <div class="chr">Antrenörlük & Performans</div>
+  </div>
 
   <div class="tp-body">
     <!-- ── TAB BUILDER ── -->
@@ -746,7 +758,7 @@ input[type=range].mood-range::-moz-range-thumb{
     <!-- ── TAB PROGRAMS ── -->
     <div id="tab-programs" style="display:none">
       <!-- Posture shortcut -->
-      <a href="posture.html" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-decoration:none">
+      <a href="posture.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:12px;padding:14px 16px;margin-bottom:16px;text-decoration:none">
         <span style="font-size:24px">🔬</span>
         <div>
           <div style="font-size:14px;font-weight:700;color:#E8EDF2;margin-bottom:2px">Postür & Mobilite Analizi Modülü</div>
@@ -1022,6 +1034,66 @@ input[type=range].mood-range::-moz-range-thumb{
       </div>
     </div>
 
+    <!-- ── TAB INTAKE (ANKET) ── -->
+    <div id="tab-intake" style="display:none">
+
+      <!-- Hero -->
+      <div style="background:linear-gradient(135deg,#0F0A05,#080A0C);border:1px solid #2E1A08;border-radius:16px;padding:24px;margin-bottom:24px;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;right:-40px;width:200px;height:200px;border-radius:50%;background:radial-gradient(circle,rgba(255,92,0,.08),transparent);pointer-events:none"></div>
+        <div class="tag tag-fire" style="margin-bottom:12px">📋 Üye Tanışma Anketi</div>
+        <div style="font-family:var(--display);font-size:26px;letter-spacing:.05em;margin-bottom:8px">YENİ ÜYE <span style="color:var(--fire)">ANKETİ</span></div>
+        <p style="font-size:13px;color:var(--muted2);line-height:1.6;max-width:500px;margin-bottom:16px">
+          Yaş, spor geçmişi, sakatlık durumu, ekipman erişimi ve hedefler gibi 24 soruluk profesyonel bir anket. Üyene gönder, doldursun, cevapları burada gör.
+        </p>
+
+        <div class="link-output" style="margin-top:0">
+          <input id="intakeLink" type="text" readonly value="">
+          <button class="btn btn-fire btn-sm" onclick="copyIntakeLink()">Kopyala</button>
+        </div>
+        <p style="font-size:12px;color:var(--muted);margin-top:8px">📱 Bu linki yeni üyene gönder — anketi doldurduğunda burada göreceksin.</p>
+      </div>
+
+      <!-- Stats -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px">
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:var(--fire)" id="intake-stat-total">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Toplam Anket</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:#FF4444" id="intake-stat-pain">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Sakatlığı Olan</div>
+        </div>
+        <div class="card" style="text-align:center">
+          <div style="font-family:var(--display);font-size:32px;color:#10B981" id="intake-stat-week">—</div>
+          <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em">Bu Hafta</div>
+        </div>
+      </div>
+
+      <!-- Responses list -->
+      <div class="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <div class="card-title" style="margin:0">Gelen Cevaplar</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadIntakeForms()">🔄 Yenile</button>
+        </div>
+        <div id="intakeList">
+          <div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">
+            Henüz anket cevabı yok.<br>Üyene yukarıdaki linki gönder.
+          </div>
+        </div>
+      </div>
+
+      <!-- Detail modal -->
+      <div class="modal-overlay" id="intakeDetailOverlay">
+        <div class="modal" style="max-width:600px;max-height:85vh;overflow-y:auto">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+            <h3 id="intakeDetailName">Üye Detayı</h3>
+            <button class="btn btn-ghost btn-sm" onclick="closeIntakeDetail()">✕</button>
+          </div>
+          <div id="intakeDetailBody"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1074,7 +1146,7 @@ input[type=range].mood-range::-moz-range-thumb{
     <div class="mv-ex-list" id="exList"></div>
 
     <!-- Posture Analysis Button -->
-    <a href="posture.html" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:14px;padding:18px 20px;margin-bottom:16px;text-decoration:none;transition:border .2s" onmouseover="this.style.borderColor='#60A5FA'" onmouseout="this.style.borderColor='#1A2540'">
+    <a href="posture.html" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#050A1A,#080A0C);border:1px solid #1A2540;border-radius:14px;padding:18px 20px;margin-bottom:16px;text-decoration:none;transition:border .2s" onmouseover="this.style.borderColor='#60A5FA'" onmouseout="this.style.borderColor='#1A2540'">
       <div style="width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,#1A3060,#0A1530);display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;border:1px solid #2A4080">🔬</div>
       <div style="flex:1">
         <div style="font-size:15px;font-weight:700;color:#E8EDF2;margin-bottom:3px">Postür & Mobilite Analizi</div>
@@ -1476,12 +1548,15 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 
 /* ─── TABS ─── */
 function showTab(t) {
-  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition','tracker'][i] === t));
+  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition','tracker','intake'][i] === t));
   document.getElementById('tab-builder').style.display = t === 'builder' ? 'block' : 'none';
   document.getElementById('tab-programs').style.display = t === 'programs' ? 'block' : 'none';
   document.getElementById('tab-nutrition').style.display = t === 'nutrition' ? 'block' : 'none';
   const tt = document.getElementById('tab-tracker'); if(tt) tt.style.display = t === 'tracker' ? 'block' : 'none';
+  const ti = document.getElementById('tab-intake'); if(ti) ti.style.display = t === 'intake' ? 'block' : 'none';
   if (t === 'programs') renderProgList();
+  if (t === 'tracker') loadReports();
+  if (t === 'intake') loadIntakeForms();
 }
 
 /* ─── EXERCISES BUILDER ─── */
@@ -2282,6 +2357,10 @@ window.addEventListener('load', () => {
   updateSbStatus(true);
   // Auto-load reports if on tracker tab
   setTimeout(() => loadReports(), 500);
+  // Set centered hero photo from existing logo image
+  const heroImg = document.getElementById('tpHeroImg');
+  const existingLogo = document.querySelector('.bc-logo-mark img');
+  if (heroImg && existingLogo) heroImg.src = existingLogo.src;
 });
 
 function saveSupabase() {
@@ -2741,6 +2820,170 @@ function renderMoodHistory(history) {
     </div>`;
 }
 
+
+/* ═══════════════════════════════════
+   INTAKE FORMS (ANKET)
+═══════════════════════════════════ */
+window.addEventListener('load', () => {
+  const linkEl = document.getElementById('intakeLink');
+  if (linkEl) linkEl.value = location.origin + location.pathname.replace('index.html','') + 'intake.html';
+});
+
+function copyIntakeLink() {
+  const link = document.getElementById('intakeLink').value;
+  navigator.clipboard.writeText(link).then(() => toast('📋 Anket linki kopyalandı!'));
+}
+
+let allIntakeForms = [];
+
+async function loadIntakeForms() {
+  const el = document.getElementById('intakeList');
+  if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">Yükleniyor...</div>';
+  try {
+    const res = await fetch(sbUrl + '/rest/v1/intake_forms?order=created_at.desc&limit=100', {
+      headers: { 'apikey': sbKey, 'Authorization': 'Bearer ' + sbKey }
+    });
+    if (!res.ok) {
+      if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--fire)">Tablo henüz oluşturulmadı.<br><br><button class="btn btn-sm" style="background:#3ECF8E;color:#000;font-weight:700" onclick="copyIntakeSQL()">SQL Kodunu Kopyala</button></div>';
+      return;
+    }
+    allIntakeForms = await res.json();
+    renderIntakeList(allIntakeForms);
+    updateIntakeStats(allIntakeForms);
+  } catch(e) {
+    if (el) el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--fire)">Hata: ' + e.message + '</div>';
+  }
+}
+
+function copyIntakeSQL() {
+  const sql = `CREATE TABLE intake_forms (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  member_name text, phone text, age integer, gender text,
+  height integer, weight numeric, experience text,
+  past_sports text[], training_frequency text,
+  pain_areas text[], pain_detail text,
+  medical_conditions text[], doctor_clearance text,
+  training_location text, equipment text[], session_duration text,
+  training_style text[], main_goal text, target_weight text,
+  timeline text, motivation text, diet_style text, allergies text,
+  meals_per_day text, cooking_time text, sleep_hours numeric,
+  stress_level integer, occupation text, extra_notes text,
+  full_data jsonb, created_at timestamptz DEFAULT now()
+);
+ALTER TABLE intake_forms ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Allow all" ON intake_forms FOR ALL USING (true) WITH CHECK (true);`;
+  navigator.clipboard.writeText(sql).then(() => toast('✅ SQL kopyalandı! Supabase SQL Editor\\'a yapıştır.'));
+}
+
+function renderIntakeList(forms) {
+  const el = document.getElementById('intakeList');
+  if (!el) return;
+  if (!forms.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px;font-size:13px">Henüz anket cevabı yok.<br>Üyene yukarıdaki linki gönder.</div>';
+    return;
+  }
+  el.innerHTML = forms.map((f, idx) => {
+    const d = new Date(f.created_at);
+    const dateStr = d.toLocaleDateString('tr-TR', {day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    const hasPain = f.pain_areas && f.pain_areas.length && !f.pain_areas.includes('none');
+    const goalEmoji = {fat_loss:'🔥',muscle_gain:'💪',fitness:'⚡',performance:'🏆',rehab:'🩹'}[f.main_goal] || '🎯';
+    return `<div onclick="openIntakeDetail(${idx})" style="display:flex;align-items:center;gap:14px;padding:14px;background:var(--s2);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;transition:border .15s" onmouseover="this.style.borderColor='var(--fire)'" onmouseout="this.style.borderColor='var(--border)'">
+      <div style="width:40px;height:40px;border-radius:10px;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">${goalEmoji}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;font-size:14px;margin-bottom:2px">${f.member_name || 'İsimsiz'}</div>
+        <div style="font-size:11px;color:var(--muted)">${f.age?f.age+' yaş · ':''}${f.experience||''} ${hasPain?'· ⚠️ Ağrı/Sakatlık var':''}</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);font-family:var(--mono);flex-shrink:0">${dateStr}</div>
+      <div style="color:var(--muted);flex-shrink:0">→</div>
+    </div>`;
+  }).join('');
+}
+
+function updateIntakeStats(forms) {
+  const total = forms.length;
+  const painCount = forms.filter(f => f.pain_areas && f.pain_areas.length && !f.pain_areas.includes('none')).length;
+  const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate()-7);
+  const weekCount = forms.filter(f => new Date(f.created_at) > weekAgo).length;
+  const s = id => document.getElementById(id);
+  if(s('intake-stat-total')) s('intake-stat-total').textContent = total;
+  if(s('intake-stat-pain')) s('intake-stat-pain').textContent = painCount;
+  if(s('intake-stat-week')) s('intake-stat-week').textContent = weekCount;
+}
+
+function openIntakeDetail(idx) {
+  const f = allIntakeForms[idx];
+  if (!f) return;
+  document.getElementById('intakeDetailName').textContent = f.member_name || 'İsimsiz Üye';
+
+  const goalLabels = {fat_loss:'🔥 Yağ Yakmak',muscle_gain:'💪 Kas Kazanmak',fitness:'⚡ Genel Fitness',performance:'🏆 Performans',rehab:'🩹 Rehabilitasyon'};
+  const expLabels = {beginner:'🌱 Yeni Başlıyor',returning:'🔄 Ara Verdi, Dönüyor',intermediate:'📈 Orta Seviye',advanced:'🏆 İleri Seviye'};
+  const locLabels = {gym:'🏋️ Spor Salonu',home:'🏠 Evde',both:'🔄 İkisi de',outdoor:'🌳 Açık Alan'};
+  const hasPain = f.pain_areas && f.pain_areas.length && !f.pain_areas.includes('none');
+
+  const row = (label, val, highlight) => val ? `<div style="display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--border);font-size:13px"><span style="color:var(--muted)">${label}</span><span style="text-align:right;${highlight?'color:#FF4444;font-weight:600':''}">${val}</span></div>` : '';
+
+  let html = '<div style="display:flex;flex-direction:column;gap:0">';
+  html += row('📞 Telefon', f.phone);
+  html += row('🎂 Yaş', f.age);
+  html += row('⚧ Cinsiyet', {male:'Erkek',female:'Kadın',other:'Belirtmedi'}[f.gender]);
+  html += row('📏 Boy/Kilo', f.height && f.weight ? f.height+' cm / '+f.weight+' kg' : null);
+  html += row('🏃 Deneyim', expLabels[f.experience]);
+  html += row('📅 Sıklık', f.training_frequency ? f.training_frequency+' gün/hafta' : null);
+  html += row('🎯 Hedef', goalLabels[f.main_goal]);
+  html += row('⏳ Süre Hedefi', f.timeline);
+  html += row('📍 Konum', locLabels[f.training_location]);
+  html += row('⏱️ Süre', f.session_duration ? f.session_duration+' dk' : null);
+  
+  if (f.past_sports && f.past_sports.length) html += row('🏅 Geçmiş Sporlar', f.past_sports.join(', '));
+  if (f.training_style && f.training_style.length) html += row('💪 Tarz Tercihi', f.training_style.join(', '));
+  if (f.equipment && f.equipment.length) html += row('🏋️ Ekipman', f.equipment.join(', '));
+
+  html += '</div>';
+
+  // Pain section - highlighted
+  if (hasPain) {
+    html += `<div style="background:#1A0505;border:1px solid #3A1010;border-radius:10px;padding:14px;margin-top:14px">
+      <div style="font-size:11px;color:#FF4444;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">⚠️ Ağrı / Sakatlık Bölgeleri</div>
+      <div style="font-size:13px;margin-bottom:8px">${f.pain_areas.join(', ')}</div>
+      ${f.pain_detail ? `<div style="font-size:12px;color:var(--muted2);line-height:1.6;padding-top:8px;border-top:1px solid #3A1010">${f.pain_detail}</div>` : ''}
+    </div>`;
+  }
+
+  if (f.medical_conditions && f.medical_conditions.length && !f.medical_conditions.includes('Yok')) {
+    html += `<div style="background:#1A1000;border:1px solid #3A2800;border-radius:10px;padding:14px;margin-top:10px">
+      <div style="font-size:11px;color:#F59E0B;font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🏥 Sağlık Durumu</div>
+      <div style="font-size:13px">${f.medical_conditions.join(', ')}</div>
+    </div>`;
+  }
+
+  if (f.allergies) {
+    html += `<div style="background:var(--s2);border-radius:10px;padding:14px;margin-top:10px">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">🚫 Alerjiler</div>
+      <div style="font-size:13px">${f.allergies}</div>
+    </div>`;
+  }
+
+  if (f.motivation) {
+    html += `<div style="background:linear-gradient(135deg,#0F0A05,#080A0C);border:1px solid #2E1A08;border-radius:10px;padding:14px;margin-top:10px">
+      <div style="font-size:11px;color:var(--fire);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">💭 Motivasyonu</div>
+      <div style="font-size:13px;line-height:1.6;color:var(--muted2)">${f.motivation}</div>
+    </div>`;
+  }
+
+  if (f.extra_notes) {
+    html += `<div style="background:var(--s2);border-radius:10px;padding:14px;margin-top:10px">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">📝 Ek Notlar</div>
+      <div style="font-size:13px;line-height:1.6">${f.extra_notes}</div>
+    </div>`;
+  }
+
+  document.getElementById('intakeDetailBody').innerHTML = html;
+  document.getElementById('intakeDetailOverlay').classList.add('open');
+}
+
+function closeIntakeDetail() {
+  document.getElementById('intakeDetailOverlay').classList.remove('open');
+}
 
 /* ─── AI DRAWER ─── */
 function openAI() {
