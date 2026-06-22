@@ -683,21 +683,7 @@ footer{
       <div style="margin-bottom:28px">
         <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#FF8C42;margin-bottom:14px">Ödeme Bilgileri</div>
         
-        <!-- Yapı Kredi Logo + Banka adı -->
-        <div style="display:flex;align-items:center;gap:14px;background:#0D1015;border:1px solid #232830;border-radius:12px;padding:16px 20px;margin-bottom:12px">
-          <!-- Yapı Kredi logosu (SVG) -->
-          <svg width="48" height="48" viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
-            <rect width="120" height="120" rx="16" fill="#002D62"/>
-            <text x="60" y="52" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">YAPI</text>
-            <text x="60" y="68" font-family="Arial Black,sans-serif" font-size="11" font-weight="900" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5">KREDİ</text>
-            <rect x="20" y="74" width="80" height="3" rx="1.5" fill="#FF6B00"/>
-            <text x="60" y="92" font-family="Arial,sans-serif" font-size="8.5" fill="#AAC4E8" text-anchor="middle" letter-spacing="0.3">BANK</text>
-          </svg>
-          <div>
-            <div style="font-size:14px;font-weight:700;color:#EDF0F4">Yapı Kredi Bankası</div>
-            <div style="font-size:12px;color:#6B7A8A;margin-top:2px">Hesap Sahibi: Ebubekir Erenoğlu</div>
-          </div>
-        </div>
+
 
         <!-- IBAN -->
         <div style="background:#0D1015;border:1px solid #232830;border-radius:12px;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
@@ -711,7 +697,7 @@ footer{
 
       <!-- Açıklama notu -->
       <div style="background:rgba(255,92,0,.06);border:1px solid rgba(255,92,0,.15);border-radius:10px;padding:14px 16px;margin-bottom:28px;font-size:13px;color:#9AAABB;line-height:1.6">
-        💡 <strong style="color:#FF8C42">Açıklama kısmına</strong> adınızı ve soyadınızı yazmanızı öneririz. Ödeme sonrası aşağıdaki formu doldurun.
+        💡 <strong style="color:#FF8C42">Açıklama kısmını boş bırakın.</strong> Ödemeyi gönderdikten sonra dekontu <strong style="color:#FF8C42">@bekir.erenoglu</strong> Instagram hesabına DM olarak atın. Ardından aşağıdaki formu doldurun.
       </div>
 
       <!-- FORM -->
@@ -726,16 +712,7 @@ footer{
           <label style="font-size:12px;color:#9AAABB;font-weight:600;display:block;margin-bottom:6px">E-posta Adresi * <span style="color:#6B7A8A;font-weight:400">(program buraya gönderilecek)</span></label>
           <input id="f_email" type="email" placeholder="ornek@mail.com" style="width:100%;background:#0D1015;border:1.5px solid #232830;border-radius:10px;color:#EDF0F4;font-family:'Inter',sans-serif;font-size:14px;padding:13px 14px;outline:none;transition:border .2s" onfocus="this.style.borderColor='#FF5C00'" onblur="this.style.borderColor='#232830'">
         </div>
-        <div>
-          <label style="font-size:12px;color:#9AAABB;font-weight:600;display:block;margin-bottom:6px">Dekont Görseli (opsiyonel — Instagram DM'den de gönderebilirsiniz)</label>
-          <div id="dropZone" style="border:1.5px dashed #232830;border-radius:10px;padding:24px;text-align:center;cursor:pointer;transition:border .2s;background:#0D1015" onclick="document.getElementById('f_receipt').click()" ondragover="event.preventDefault();this.style.borderColor='#FF5C00'" ondragleave="this.style.borderColor='#232830'" ondrop="handleDrop(event)">
-            <div style="font-size:24px;margin-bottom:8px">📎</div>
-            <div style="font-size:13px;color:#9AAABB">Dekont fotoğrafını buraya sürükle veya tıkla</div>
-            <div style="font-size:11px;color:#6B7A8A;margin-top:4px">JPG, PNG, PDF</div>
-          </div>
-          <input id="f_receipt" type="file" accept="image/*,.pdf" style="display:none" onchange="handleFile(this.files[0])">
-          <div id="filePreview" style="display:none;margin-top:10px;background:#0D1015;border:1px solid #232830;border-radius:8px;padding:10px 14px;font-size:13px;color:#3DDB85"></div>
-        </div>
+
       </div>
 
       <!-- GÖNDER BUTONU -->
@@ -776,8 +753,6 @@ emailjs.init('3c_6R7wfDZ_pkY4WJ');
 
 const PROGRAM_LINK = 'https://youtube.com/playlist?list=PLOz0P-15_UbuxizPX3bM9_CTw5pLcv6Cs&si=dGVu_8ta0eoQFtKT';
 
-let receiptFile = null;
-
 function copyIban() {
   const iban = 'TR540006701000000052541310';
   navigator.clipboard.writeText(iban).then(() => {
@@ -793,22 +768,6 @@ function copyIban() {
       btn.style.color = '#FF8C42';
     }, 2500);
   });
-}
-
-function handleFile(file) {
-  if (!file) return;
-  receiptFile = file;
-  const preview = document.getElementById('filePreview');
-  preview.style.display = 'block';
-  preview.innerHTML = '✅ ' + file.name + ' (' + (file.size/1024).toFixed(0) + ' KB)';
-  document.getElementById('dropZone').style.borderColor = '#3DDB85';
-}
-
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('dropZone').style.borderColor = '#232830';
-  const file = e.dataTransfer.files[0];
-  if (file) handleFile(file);
 }
 
 async function submitForm() {
