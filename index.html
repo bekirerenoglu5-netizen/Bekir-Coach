@@ -644,6 +644,7 @@ input[type=range].mood-range::-moz-range-thumb{
       <button class="tp-tab" onclick="showTab('nutrition')">Beslenme</button>
       <button class="tp-tab" onclick="showTab('tracker')">📊 Takip</button>
       <button class="tp-tab" onclick="showTab('intake')">📋 Anket</button>
+      <button class="tp-tab" onclick="showTab('crm')">👥 Müşteriler</button>
     </div>
   </nav>
 
@@ -1503,6 +1504,48 @@ input[type=range].mood-range::-moz-range-thumb{
   </div>
 </div>
 
+<!-- CRM TAB -->
+<div id="tab-crm" style="display:none">
+
+  <!-- Özet kartları -->
+  <div id="crm-summary" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:24px"></div>
+
+  <!-- Müşteri ekle -->
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:24px">
+    <div style="font-size:13px;font-weight:700;color:var(--fire2);letter-spacing:.08em;text-transform:uppercase;margin-bottom:16px">➕ Yeni Müşteri Ekle</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <input id="crm-name" placeholder="Ad Soyad *" class="inp" style="font-size:13px">
+      <select id="crm-package" class="inp" style="font-size:13px">
+        <option value="">Paket Seç *</option>
+        <option value="8 Haftalık — 2.250 TL">8 Haftalık — 2.250 TL</option>
+        <option value="2 Aylık — 4.500 TL">2 Aylık — 4.500 TL</option>
+        <option value="3 Aylık — 6.900 TL">3 Aylık — 6.900 TL</option>
+        <option value="6 Aylık — 12.000 TL">6 Aylık — 12.000 TL</option>
+        <option value="14 Gün Protokol — 490 TL">14 Gün Protokol — 490 TL</option>
+        <option value="Diğer">Diğer</option>
+      </select>
+      <input id="crm-start" type="date" class="inp" style="font-size:13px">
+      <input id="crm-price" type="number" placeholder="Tutar (TL)" class="inp" style="font-size:13px">
+      <input id="crm-duration" type="number" placeholder="Süre (gün) *" class="inp" style="font-size:13px">
+      <input id="crm-phone" placeholder="Telefon / Instagram" class="inp" style="font-size:13px">
+    </div>
+    <input id="crm-note" placeholder="Not (opsiyonel)" class="inp" style="font-size:13px;width:100%;margin-bottom:10px">
+    <button onclick="addCRMClient()" class="btn btn-fire" style="font-size:13px">Müşteriyi Kaydet</button>
+  </div>
+
+  <!-- Filtre -->
+  <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <button onclick="setCRMFilter('all')" id="crm-f-all" class="btn btn-fire btn-sm">Tümü</button>
+    <button onclick="setCRMFilter('active')" id="crm-f-active" class="btn btn-ghost btn-sm">✅ Aktif</button>
+    <button onclick="setCRMFilter('expiring')" id="crm-f-expiring" class="btn btn-ghost btn-sm">⚠️ Bitiyor</button>
+    <button onclick="setCRMFilter('expired')" id="crm-f-expired" class="btn btn-ghost btn-sm">❌ Süresi Dolmuş</button>
+  </div>
+
+  <!-- Müşteri listesi -->
+  <div id="crm-list"></div>
+
+</div>
+
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -1548,15 +1591,19 @@ function closeModal() { document.getElementById('modalOverlay').classList.remove
 
 /* ─── TABS ─── */
 function showTab(t) {
-  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition','tracker','intake'][i] === t));
+  document.querySelectorAll('.tp-tab').forEach((b, i) => b.classList.toggle('active', ['builder','programs','nutrition','tracker','intake','crm'][i] === t));
   document.getElementById('tab-builder').style.display = t === 'builder' ? 'block' : 'none';
   document.getElementById('tab-programs').style.display = t === 'programs' ? 'block' : 'none';
   document.getElementById('tab-nutrition').style.display = t === 'nutrition' ? 'block' : 'none';
   const tt = document.getElementById('tab-tracker'); if(tt) tt.style.display = t === 'tracker' ? 'block' : 'none';
   const ti = document.getElementById('tab-intake'); if(ti) ti.style.display = t === 'intake' ? 'block' : 'none';
+  const tc = document.getElementById('tab-crm'); if(tc) tc.style.display = t === 'crm' ? 'block' : 'none';
+  // Hero kartı sadece builder sekmesinde görünsün
+  const hero = document.querySelector('.coach-hero-tp'); if(hero) hero.style.display = t === 'builder' ? 'flex' : 'none';
   if (t === 'programs') renderProgList();
   if (t === 'tracker') loadReports();
   if (t === 'intake') loadIntakeForms();
+  if (t === 'crm') renderCRM();
 }
 
 /* ─── EXERCISES BUILDER ─── */
@@ -2347,6 +2394,141 @@ function transferToNutrition() {
 // Supabase credentials — hardcoded
 let sbUrl = 'https://gqvtngmmvzagreqjfyrk.supabase.co';
 let sbKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdxdnRuZ21tdnphZ3JlcWpmeXJrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE4OTQ3NTMsImV4cCI6MjA5NzQ3MDc1M30.sOVQPVonNapiOIguq_hzrAkWCORNMBhoGMhwaOOk_aQ';
+
+
+
+/* ─── CRM ─── */
+let crmClients = JSON.parse(localStorage.getItem('bc_crm_clients') || '[]');
+let crmFilter = 'all';
+
+function saveCRM() {
+  localStorage.setItem('bc_crm_clients', JSON.stringify(crmClients));
+}
+
+function getCRMStatus(c) {
+  const start = new Date(c.start);
+  const end = new Date(start);
+  end.setDate(end.getDate() + parseInt(c.duration));
+  const today = new Date();
+  const daysLeft = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
+  const nextPayment = new Date(start);
+  // Aylık ödeme varsa bir sonraki ayı hesapla
+  while (nextPayment <= today) nextPayment.setMonth(nextPayment.getMonth() + 1);
+  return { daysLeft, end, nextPayment };
+}
+
+function addCRMClient() {
+  const name = document.getElementById('crm-name').value.trim();
+  const pkg = document.getElementById('crm-package').value;
+  const start = document.getElementById('crm-start').value;
+  const price = document.getElementById('crm-price').value;
+  const duration = document.getElementById('crm-duration').value;
+  const phone = document.getElementById('crm-phone').value.trim();
+  const note = document.getElementById('crm-note').value.trim();
+  if (!name) { toast('Ad Soyad zorunlu!'); return; }
+  if (!pkg) { toast('Paket seçimi zorunlu!'); return; }
+  if (!start) { toast('Başlangıç tarihi zorunlu!'); return; }
+  if (!duration) { toast('Süre (gün) zorunlu!'); return; }
+  const client = {
+    id: Date.now().toString(36),
+    name, pkg, start, price: price || '', duration, phone, note,
+    created: new Date().toLocaleDateString('tr-TR')
+  };
+  crmClients.unshift(client);
+  saveCRM();
+  // Formu temizle
+  ['crm-name','crm-price','crm-phone','crm-note'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('crm-package').value = '';
+  document.getElementById('crm-start').value = '';
+  document.getElementById('crm-duration').value = '';
+  toast('✅ Müşteri eklendi!');
+  renderCRM();
+}
+
+function deleteCRMClient(id) {
+  if (!confirm('Bu müşteriyi silmek istiyor musun?')) return;
+  crmClients = crmClients.filter(c => c.id !== id);
+  saveCRM();
+  renderCRM();
+}
+
+function setCRMFilter(f) {
+  crmFilter = f;
+  ['all','active','expiring','expired'].forEach(x => {
+    const btn = document.getElementById('crm-f-' + x);
+    if (btn) { btn.className = x === f ? 'btn btn-fire btn-sm' : 'btn btn-ghost btn-sm'; }
+  });
+  renderCRM();
+}
+
+function renderCRM() {
+  const list = document.getElementById('crm-list');
+  const summary = document.getElementById('crm-summary');
+  if (!list) return;
+
+  // Özet hesapla
+  let totalActive = 0, totalExpiring = 0, totalExpired = 0, totalRevenue = 0;
+  crmClients.forEach(c => {
+    const { daysLeft } = getCRMStatus(c);
+    if (daysLeft > 7) totalActive++;
+    else if (daysLeft > 0) totalExpiring++;
+    else totalExpired++;
+    if (c.price) totalRevenue += parseFloat(c.price);
+  });
+
+  summary.innerHTML = [
+    { label: 'Toplam Müşteri', val: crmClients.length, color: '#9AAABB' },
+    { label: '✅ Aktif', val: totalActive, color: '#3DDB85' },
+    { label: '⚠️ Bitiyor', val: totalExpiring, color: '#FFB347' },
+    { label: '❌ Süresi Dolmuş', val: totalExpired, color: '#FF6B6B' },
+    { label: '💰 Toplam Gelir', val: totalRevenue.toLocaleString('tr-TR') + ' TL', color: '#FF8C42' },
+  ].map(s => `<div style="background:var(--s2);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center">
+    <div style="font-size:22px;font-weight:800;color:${s.color}">${s.val}</div>
+    <div style="font-size:11px;color:var(--muted);margin-top:3px">${s.label}</div>
+  </div>`).join('');
+
+  // Filtrele
+  let filtered = crmClients.filter(c => {
+    const { daysLeft } = getCRMStatus(c);
+    if (crmFilter === 'active') return daysLeft > 7;
+    if (crmFilter === 'expiring') return daysLeft > 0 && daysLeft <= 7;
+    if (crmFilter === 'expired') return daysLeft <= 0;
+    return true;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px">Henüz müşteri yok.</div>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => {
+    const { daysLeft, end, nextPayment } = getCRMStatus(c);
+    const statusColor = daysLeft > 7 ? '#3DDB85' : daysLeft > 0 ? '#FFB347' : '#FF6B6B';
+    const statusText = daysLeft > 7 ? '✅ Aktif' : daysLeft > 0 ? '⚠️ ' + daysLeft + ' gün kaldı' : '❌ Süresi doldu';
+    const endStr = end.toLocaleDateString('tr-TR');
+    const nextPayStr = nextPayment.toLocaleDateString('tr-TR');
+    return `<div style="background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <div style="font-size:15px;font-weight:700;margin-bottom:4px">${c.name}</div>
+          <div style="font-size:12px;color:var(--fire2);font-weight:600;margin-bottom:6px">${c.pkg}</div>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--muted2)">📅 Başlangıç: ${new Date(c.start).toLocaleDateString('tr-TR')}</span>
+            <span style="font-size:12px;color:var(--muted2)">🏁 Bitiş: ${endStr}</span>
+            ${c.price ? `<span style="font-size:12px;color:var(--muted2)">💰 ${parseFloat(c.price).toLocaleString('tr-TR')} TL</span>` : ''}
+            ${c.phone ? `<span style="font-size:12px;color:var(--muted2)">📱 ${c.phone}</span>` : ''}
+          </div>
+          ${c.note ? `<div style="font-size:12px;color:var(--muted);margin-top:6px">💬 ${c.note}</div>` : ''}
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+          <div style="background:${statusColor}22;border:1px solid ${statusColor}44;color:${statusColor};font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px">${statusText}</div>
+          <div style="font-size:11px;color:var(--muted);text-align:right">Sonraki ödeme: ${nextPayStr}</div>
+          <button onclick="deleteCRMClient('${c.id}')" style="background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.2);color:#FF8888;border-radius:7px;font-size:11px;padding:4px 10px;cursor:pointer">Sil</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
 
 // Auto-connect on load
 window.addEventListener('load', () => {
