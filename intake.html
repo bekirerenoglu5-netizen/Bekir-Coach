@@ -218,7 +218,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;heigh
   <div class="final-desc">
     Cevapların başarıyla kaydedildi. Bekir Coach yakında seninle iletişime geçip kişisel programını hazırlayacak.
   </div>
-  <div class="final-desc" style="color:var(--fire2);font-weight:600;margin-top:16px">💪 Hazır mısın? Dönüşüm başlıyor!</div>
+  <div id="riskResultCard" style="margin:16px 0;border-radius:12px;padding:16px 20px;text-align:left"></div>
+  <div class="final-desc" style="color:var(--fire2);font-weight:600;margin-top:4px">💪 Hazır mısın? Dönüşüm başlıyor!</div>
   <a id="waSendBtn" href="#" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border-radius:12px;padding:15px 28px;font-size:14px;font-weight:700;text-decoration:none;margin-top:24px"><svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>Cevaplarımı Bekir'e Gönder</a>
   <div class="final-desc" style="font-size:12px;margin-top:10px;opacity:.7">Az önce verdiğin cevapların özeti WhatsApp'ta açılacak, sadece gönder demen yeterli.</div>
 </div>
@@ -276,6 +277,25 @@ const STEPS = [
   { section:'Sağlık Bilgileri', key:'doctor_clearance', type:'single', title:'Doktordan spor onayın var mı?', sub:'Sağlık durumun varsa bu önemli.', options:[
     {v:'yes', i:'✅', t:'Evet, onayım var'}, {v:'no_needed', i:'➖', t:'Gerekli değil, sağlıklıyım'}, {v:'need_check', i:'⚠️', t:'Kontrol ettirmem lazım'}
   ] },
+
+  // ── KIRMIZI BAYRAK TARAMASI ──
+  { section:'🚨 Güvenlik Taraması', key:'red_flag_neuro', type:'single', title:'Ağrınla birlikte aşağıdakilerden biri var mı?', sub:'⚠️ Bu sorular senin güvenliğin için kritik — dürüstçe yanıtla.', options:[
+    {v:'none', i:'✅', t:'Hayır, hiçbiri yok', d:'Sadece ağrı var'},
+    {v:'bladder', i:'🚨', t:'Bağırsak/Mesane kontrolünde değişiklik', d:'Kontrol kaybı veya zorlanma'},
+    {v:'weakness', i:'🚨', t:'Bacak veya kolda güçsüzlük/uyuşma', d:'Giderek artan güçsüzlük'},
+    {v:'balance', i:'🚨', t:'Denge kaybı veya yürüme bozukluğu', d:'Dengeyi tutmakta zorlanma'},
+    {v:'severe', i:'🚨', t:'Dinlenmede de geçmeyen şiddetli ağrı', d:'Gece ağrısı, sürekli ağrı'}
+  ], required:true },
+  { section:'🚨 Güvenlik Taraması', key:'red_flag_history', type:'multi', title:'Geçmişinde bunlardan biri var mı?', sub:'Birden fazla seçebilirsin.', options:[
+    'Hiçbiri','Kanser teşhisi','Osteoporoz/kemik erimesi','Son 6 ayda kırık veya ameliyat','Kalp krizi veya stent','Kan sulandırıcı ilaç kullanımı','Kontrolsüz tansiyon (200/110 üzeri)','Gebelik (ilk 3 ay veya riskli)'
+  ] },
+  { section:'🚨 Güvenlik Taraması', key:'pain_onset', type:'single', title:'Ağrın ne zaman başladı?', sub:'Ne zaman başladığı programı etkiler.', options:[
+    {v:'acute', i:'⚡', t:'Son 2 hafta içinde (akut)', d:'Yeni başladı'},
+    {v:'subacute', i:'📅', t:'2-6 hafta önce', d:'Nispeten yeni'},
+    {v:'chronic', i:'🗓️', t:'6 haftadan uzun süredir (kronik)', d:'Uzun süredir devam ediyor'},
+    {v:'no_pain', i:'✅', t:'Ağrım yok', d:'Herhangi bir ağrım yok'}
+  ], required:true },
+  { section:'🚨 Güvenlik Taraması', key:'pain_intensity', type:'slider', title:'Ağrının şiddeti nedir? (0 = yok, 10 = dayanılmaz)', sub:'Genel olarak en çok hissettiğin şiddeti seç.', min:0, max:10, step:1, unit:'/10', default:0, labels:['😊 Ağrı Yok','😰 Dayanılmaz'] },
 
   // ── EKİPMAN & ANTRENMAN TERCİHLERİ ──
   { section:'Ekipman & Tercihler', key:'training_location', type:'single', title:'Nerede antrenman yapacaksın?', options:[
@@ -539,12 +559,51 @@ function prevStep() {
 /* ═══════════════════════════════════
    SUBMIT
 ═══════════════════════════════════ */
+function calcRiskScore(answers) {
+  let score = 0;
+  let flags = [];
+  let level = 'green';
+
+  // Kırmızı bayrak — nörolojik
+  if (answers.red_flag_neuro && answers.red_flag_neuro !== 'none') {
+    score += 50;
+    flags.push('🚨 Nörolojik belirti');
+    level = 'red';
+  }
+  // Kırmızı bayrak — geçmiş
+  const redHistory = ['Kanser teşhisi','Osteoporoz/kemik erimesi','Son 6 ayda kırık veya ameliyat','Kalp krizi veya stent','Kontrolsüz tansiyon (200/110 üzeri)','Gebelik (ilk 3 ay veya riskli)'];
+  if (answers.red_flag_history) {
+    const found = answers.red_flag_history.filter(h => redHistory.includes(h));
+    if (found.length) { score += 30; flags.push('⚠️ Riskli tıbbi geçmiş'); if(level !== 'red') level = 'yellow'; }
+  }
+  // Ağrı şiddeti
+  if (answers.pain_intensity >= 7) { score += 20; flags.push('🔴 Yüksek ağrı şiddeti ('+answers.pain_intensity+'/10)'); if(level !== 'red') level = 'yellow'; }
+  else if (answers.pain_intensity >= 4) { score += 10; flags.push('🟡 Orta ağrı ('+answers.pain_intensity+'/10)'); }
+  // Akut ağrı
+  if (answers.pain_onset === 'acute') { score += 15; flags.push('⚡ Akut ağrı (son 2 hafta)'); if(level !== 'red') level = 'yellow'; }
+  // Doktor onayı yok ama sağlık sorunu var
+  if (answers.doctor_clearance === 'need_check' && answers.medical_conditions && !answers.medical_conditions.includes('Yok')) {
+    score += 20; flags.push('⚠️ Doktor onayı gerekiyor'); if(level !== 'red') level = 'yellow';
+  }
+  // Ağrı var ama doktor onayı yok
+  if (answers.pain_areas && answers.pain_areas.length > 0 && !answers.pain_areas.includes('none') && answers.doctor_clearance === 'need_check') {
+    score += 10; if(level !== 'red') level = 'yellow';
+  }
+  if (score === 0) level = 'green';
+
+  return { score, flags, level };
+}
+
 async function submitSurvey() {
   document.getElementById('surveyWrap').style.display = 'none';
   document.getElementById('finalScreen').style.display = 'flex';
 
   // WhatsApp mesajını hazırla
   const WHATSAPP_NUMBER = '905055431935';
+  const risk = calcRiskScore(answers);
+  const riskEmoji = risk.level === 'red' ? '🔴' : risk.level === 'yellow' ? '🟡' : '🟢';
+  const riskLabel = risk.level === 'red' ? 'YÜKSEK RİSK — Sağlık profesyoneline yönlendir' : risk.level === 'yellow' ? 'ORTA RİSK — Dikkatli ilerle' : 'DÜŞÜK RİSK — Normale yakın';
+  const riskFlags = risk.flags.length ? risk.flags.join(' | ') : 'Bayrak yok';
   const painText = (answers.pain_areas && answers.pain_areas.length) ? answers.pain_areas.join(', ') : 'Yok';
   const equipText = (answers.equipment && answers.equipment.length) ? answers.equipment.join(', ') : 'Belirtmedi';
   const styleText = (answers.training_style && answers.training_style.length) ? answers.training_style.join(', ') : 'Belirtmedi';
@@ -587,11 +646,25 @@ async function submitSurvey() {
 💼 *Meslek:* ${answers.occupation || '-'}
 📝 *Ek Not:* ${answers.extra_notes || '-'}
 ━━━━━━━━━━━━━━━
+${riskEmoji} *RİSK DEĞERLENDİRMESİ:* ${riskLabel}
+📋 *Bayraklar:* ${riskFlags}
+━━━━━━━━━━━━━━━
 _Bekir Coach Tanışma Anketi_`;
 
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMsg)}`;
   const waBtn = document.getElementById('waSendBtn');
   if (waBtn) waBtn.href = waUrl;
+
+  // Risk kartını göster
+  const rCard = document.getElementById('riskResultCard');
+  if (rCard) {
+    const rBg = risk.level === 'red' ? 'rgba(255,60,60,.12)' : risk.level === 'yellow' ? 'rgba(255,180,0,.12)' : 'rgba(61,219,133,.12)';
+    const rBorder = risk.level === 'red' ? 'rgba(255,60,60,.3)' : risk.level === 'yellow' ? 'rgba(255,180,0,.3)' : 'rgba(61,219,133,.3)';
+    const rColor = risk.level === 'red' ? '#FF6B6B' : risk.level === 'yellow' ? '#FFB347' : '#3DDB85';
+    rCard.style.background = rBg; rCard.style.border = '1px solid ' + rBorder;
+    rCard.innerHTML = '<div style="font-size:13px;font-weight:700;color:'+rColor+';margin-bottom:8px">'+riskEmoji+' '+riskLabel+'</div>'
+      + (risk.flags.length ? '<div style="font-size:12px;color:var(--muted2)">'+risk.flags.map(f=>'• '+f).join('<br>')+'</div>' : '');
+  }
 
   try {
     await fetch(sbUrl + '/rest/v1/intake_forms', {
