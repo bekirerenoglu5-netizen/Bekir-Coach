@@ -654,6 +654,7 @@ input[type=range].mood-range::-moz-range-thumb{
       <button class="tp-tab" onclick="showTab('tracker')">📊 Takip</button>
       <button class="tp-tab" onclick="showTab('intake')">📋 Anket</button>
       <button class="tp-tab" onclick="showTab('crm')">👥 Müşteriler</button>
+      <button class="tp-tab" onclick="showTab('gorev')">📋 Görevlerim</button>
     </div>
   </nav>
 
@@ -1561,6 +1562,52 @@ input[type=range].mood-range::-moz-range-thumb{
 
 </div>
 
+<!-- GÖREV PANELİ TAB -->
+<div id="tab-gorev" style="display:none">
+
+  <!-- ÖDEME UYARI BÖLÜMÜ -->
+  <div id="odeme-uyari" style="background:linear-gradient(135deg,#0F1215,#0A0D10);border:1px solid rgba(255,179,71,.25);border-radius:16px;padding:20px;margin-bottom:20px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#FFB347;margin-bottom:14px">💳 ÖDEME TAKVİMİ — Yaklaşan Ödemeler</div>
+    <div id="odeme-uyari-list"></div>
+  </div>
+
+  <!-- GÖREV PANELİ -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+
+    <!-- YAPILACAKLAR -->
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:18px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fire);margin-bottom:14px">✅ YAPILACAKLAR</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input id="gorev-input" class="inp" placeholder="Yeni görev ekle..." style="font-size:13px;flex:1;margin-bottom:0" onkeydown="if(event.key==='Enter')addGorev()">
+        <button onclick="addGorev()" class="btn btn-fire btn-sm">+</button>
+      </div>
+      <div id="gorev-list" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+
+    <!-- GÜNLÜK RUTİN -->
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:18px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fire2);margin-bottom:14px">🔄 GÜNLÜK RUTİN</div>
+      <div id="rutin-list" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div style="font-size:11px;color:var(--muted);margin-top:10px">Her gün sıfırlanır · Son sıfırlama: <span id="rutin-son-tarih"></span></div>
+    </div>
+
+  </div>
+
+  <!-- MÜŞTERİ NOTLARI -->
+  <div style="background:var(--s2);border:1px solid var(--border);border-radius:14px;padding:18px">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--green);margin-bottom:14px">📝 MÜŞTERİ NOTLARI</div>
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+      <select id="not-musteri" class="inp" style="font-size:13px;flex:1;min-width:150px;margin-bottom:0">
+        <option value="">Müşteri seç...</option>
+      </select>
+      <input id="not-input" class="inp" placeholder="Not ekle..." style="font-size:13px;flex:2;min-width:200px;margin-bottom:0" onkeydown="if(event.key==='Enter')addMushteriNot()">
+      <button onclick="addMushteriNot()" class="btn btn-fire btn-sm" style="white-space:nowrap">Not Ekle</button>
+    </div>
+    <div id="not-list" style="display:flex;flex-direction:column;gap:8px"></div>
+  </div>
+
+</div>
+
 <!-- Modal -->
 <div class="modal-overlay" id="modalOverlay">
   <div class="modal">
@@ -1613,12 +1660,14 @@ function showTab(t) {
   const tt = document.getElementById('tab-tracker'); if(tt) tt.style.display = t === 'tracker' ? 'block' : 'none';
   const ti = document.getElementById('tab-intake'); if(ti) ti.style.display = t === 'intake' ? 'block' : 'none';
   const tc = document.getElementById('tab-crm'); if(tc) tc.style.display = t === 'crm' ? 'block' : 'none';
+  const tg = document.getElementById('tab-gorev'); if(tg) tg.style.display = t === 'gorev' ? 'block' : 'none';
   // Hero kartı sadece builder sekmesinde görünsün
   const hero = document.querySelector('.coach-hero-tp'); if(hero) hero.style.display = t === 'builder' ? 'flex' : 'none';
   if (t === 'programs') renderProgList();
   if (t === 'tracker') loadReports();
   if (t === 'intake') loadIntakeForms();
   if (t === 'crm') renderCRM();
+  if (t === 'gorev') renderGorevler();
 }
 
 /* ─── EXERCISES BUILDER ─── */
@@ -2758,6 +2807,244 @@ function renderCRM() {
   }).join('');
 }
 
+
+
+/* ─── GÖREV PANELİ ─── */
+const RUTIN_ITEMS = [
+  'Sabah programları kontrol et',
+  'Üye mesajlarını yanıtla',
+  'Haftalık revizeleri incele',
+  'Yeni üye anketlerini gözden geçir',
+  'Sosyal medya içeriği paylaş',
+  'Günlük adım hedefini tamamla',
+];
+
+function loadGorevData() {
+  return {
+    gorevler: JSON.parse(localStorage.getItem('bc_gorevler') || '[]'),
+    rutin: JSON.parse(localStorage.getItem('bc_rutin_' + todayStr()) || '{}'),
+    notlar: JSON.parse(localStorage.getItem('bc_musteri_notlar') || '{}'),
+  };
+}
+
+function saveGorevData(key, val) {
+  if (key === 'gorevler') localStorage.setItem('bc_gorevler', JSON.stringify(val));
+  else if (key === 'rutin') localStorage.setItem('bc_rutin_' + todayStr(), JSON.stringify(val));
+  else if (key === 'notlar') localStorage.setItem('bc_musteri_notlar', JSON.stringify(val));
+}
+
+function todayStr() {
+  return new Date().toISOString().slice(0,10);
+}
+
+function renderGorevler() {
+  const data = loadGorevData();
+  renderOdemeUyari();
+  renderGorevList(data.gorevler);
+  renderRutin(data.rutin);
+  renderNotList(data.notlar);
+  renderMusteriSelect();
+}
+
+// ─── ÖDEME UYARISI ───
+function renderOdemeUyari() {
+  const el = document.getElementById('odeme-uyari-list');
+  if (!el) return;
+  const today = new Date();
+  const yaklasan = crmClients
+    .map(c => {
+      const { nextPayment, daysLeft } = getCRMStatus(c);
+      const daysToPayment = Math.ceil((nextPayment - today) / (1000*60*60*24));
+      return { ...c, nextPayment, daysLeft, daysToPayment };
+    })
+    .filter(c => c.daysToPayment >= 0 && c.daysToPayment <= 14 && c.daysLeft > 0)
+    .sort((a,b) => a.daysToPayment - b.daysToPayment);
+
+  if (!yaklasan.length) {
+    el.innerHTML = '<div style="font-size:13px;color:var(--muted)">✅ Önümüzdeki 14 günde yaklaşan ödeme yok.</div>';
+    return;
+  }
+
+  el.innerHTML = yaklasan.map(c => {
+    const urgColor = c.daysToPayment <= 3 ? '#FF6B6B' : c.daysToPayment <= 7 ? '#FFB347' : '#3DDB85';
+    const price = c.price ? parseFloat(String(c.price).replace(/\./g,'').replace(',','.')).toLocaleString('tr-TR') + ' TL' : '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,.04);border:1px solid ${urgColor}33;border-radius:10px;padding:10px 14px;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <div>
+        <span style="font-weight:700;font-size:13px">${c.name}</span>
+        <span style="font-size:11px;color:var(--muted2);margin-left:8px">${c.pkg}</span>
+        ${price ? `<span style="font-size:11px;color:var(--fire2);margin-left:8px">· ${price}</span>` : ''}
+      </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="text-align:right">
+          <div style="font-size:11px;color:var(--muted2)">Ödeme tarihi</div>
+          <div style="font-size:12px;font-weight:700;color:${urgColor}">${c.nextPayment.toLocaleDateString('tr-TR')}</div>
+        </div>
+        <div style="background:${urgColor}22;border:1px solid ${urgColor}44;color:${urgColor};font-size:12px;font-weight:700;padding:4px 10px;border-radius:7px;white-space:nowrap">
+          ${c.daysToPayment === 0 ? '🔴 BUGÜN' : c.daysToPayment === 1 ? '⚠️ YARIN' : c.daysToPayment + ' gün sonra'}
+        </div>
+        <a href="https://wa.me/905055431935?text=${encodeURIComponent('Merhaba ' + c.name + ', ödeme hatırlatması.')}" target="_blank" style="background:rgba(37,211,102,.15);border:1px solid rgba(37,211,102,.3);color:#25D366;border-radius:7px;font-size:11px;font-weight:700;padding:4px 10px;text-decoration:none;white-space:nowrap">📲 WA</a>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ─── YAPILACAKLAR ───
+function addGorev() {
+  const input = document.getElementById('gorev-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const data = loadGorevData();
+  data.gorevler.unshift({ id: Date.now().toString(36), text, done: false, created: new Date().toLocaleDateString('tr-TR') });
+  saveGorevData('gorevler', data.gorevler);
+  input.value = '';
+  renderGorevList(data.gorevler);
+  toast('✅ Görev eklendi!');
+}
+
+function toggleGorev(id) {
+  const data = loadGorevData();
+  const g = data.gorevler.find(x => x.id === id);
+  if (g) g.done = !g.done;
+  saveGorevData('gorevler', data.gorevler);
+  renderGorevList(data.gorevler);
+}
+
+function deleteGorev(id) {
+  const data = loadGorevData();
+  data.gorevler = data.gorevler.filter(x => x.id !== id);
+  saveGorevData('gorevler', data.gorevler);
+  renderGorevList(data.gorevler);
+}
+
+function renderGorevList(gorevler) {
+  const el = document.getElementById('gorev-list');
+  if (!el) return;
+  if (!gorevler.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px">Görev yok 🎉</div>';
+    return;
+  }
+  el.innerHTML = gorevler.map(g => `
+    <div style="display:flex;align-items:center;gap:8px;background:${g.done ? 'rgba(61,219,133,.06)' : 'rgba(255,255,255,.04)'};border:1px solid ${g.done ? 'rgba(61,219,133,.2)' : 'var(--border)'};border-radius:9px;padding:8px 12px;cursor:pointer" onclick="toggleGorev('${g.id}')">
+      <div style="width:18px;height:18px;border-radius:5px;border:2px solid ${g.done ? '#3DDB85' : 'var(--muted)'};background:${g.done ? '#3DDB85' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+        ${g.done ? '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>' : ''}
+      </div>
+      <span style="flex:1;font-size:13px;${g.done ? 'text-decoration:line-through;color:var(--muted)' : ''}">${g.text}</span>
+      <button onclick="event.stopPropagation();deleteGorev('${g.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;padding:0 2px;opacity:.6">✕</button>
+    </div>`).join('');
+}
+
+// ─── GÜNLÜK RUTİN ───
+function toggleRutin(idx) {
+  const data = loadGorevData();
+  data.rutin[idx] = !data.rutin[idx];
+  saveGorevData('rutin', data.rutin);
+  renderRutin(data.rutin);
+}
+
+function renderRutin(rutin) {
+  const el = document.getElementById('rutin-list');
+  const tarihEl = document.getElementById('rutin-son-tarih');
+  if (!el) return;
+  if (tarihEl) tarihEl.textContent = new Date().toLocaleDateString('tr-TR');
+  const tamamlanan = RUTIN_ITEMS.filter((_, i) => rutin[i]).length;
+  el.innerHTML = `
+    <div style="margin-bottom:10px">
+      <div style="height:4px;background:var(--border);border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${Math.round(tamamlanan/RUTIN_ITEMS.length*100)}%;background:var(--fire);border-radius:2px;transition:width .3s"></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:4px">${tamamlanan}/${RUTIN_ITEMS.length} tamamlandı</div>
+    </div>
+    ${RUTIN_ITEMS.map((item, i) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="toggleRutin(${i})">
+        <div style="width:18px;height:18px;border-radius:5px;border:2px solid ${rutin[i] ? '#3DDB85' : 'var(--muted)'};background:${rutin[i] ? '#3DDB85' : 'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          ${rutin[i] ? '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="white" stroke-width="1.5" fill="none" stroke-linecap="round"/></svg>' : ''}
+        </div>
+        <span style="font-size:13px;${rutin[i] ? 'text-decoration:line-through;color:var(--muted)' : ''}">${item}</span>
+      </div>`).join('')}`;
+}
+
+// ─── MÜŞTERİ NOTLARI ───
+function renderMusteriSelect() {
+  const sel = document.getElementById('not-musteri');
+  if (!sel) return;
+  const musteriler = [...new Set([
+    ...crmClients.map(c => c.name),
+    ...savedProgs.map(p => p.member).filter(Boolean)
+  ])].sort();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Müşteri seç...</option>' +
+    musteriler.map(m => `<option value="${m}" ${m === current ? 'selected' : ''}>${m}</option>`).join('');
+}
+
+function addMushteriNot() {
+  const musteri = document.getElementById('not-musteri').value;
+  const text = document.getElementById('not-input').value.trim();
+  if (!musteri) { toast('Müşteri seç!'); return; }
+  if (!text) { toast('Not yaz!'); return; }
+  const data = loadGorevData();
+  if (!data.notlar[musteri]) data.notlar[musteri] = [];
+  data.notlar[musteri].unshift({ id: Date.now().toString(36), text, tarih: new Date().toLocaleDateString('tr-TR') });
+  saveGorevData('notlar', data.notlar);
+  document.getElementById('not-input').value = '';
+  renderNotList(data.notlar);
+  toast('📝 Not eklendi!');
+}
+
+function deleteMushteriNot(musteri, id) {
+  const data = loadGorevData();
+  if (data.notlar[musteri]) data.notlar[musteri] = data.notlar[musteri].filter(n => n.id !== id);
+  saveGorevData('notlar', data.notlar);
+  renderNotList(data.notlar);
+}
+
+function renderNotList(notlar) {
+  const el = document.getElementById('not-list');
+  if (!el) return;
+  const tümNotlar = Object.entries(notlar).flatMap(([musteri, notArr]) =>
+    (notArr||[]).map(n => ({ ...n, musteri }))
+  ).sort((a,b) => b.id.localeCompare(a.id));
+
+  if (!tümNotlar.length) {
+    el.innerHTML = '<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px">Henüz not eklenmedi.</div>';
+    return;
+  }
+
+  // Müşteriye göre grupla
+  const byMusteri = {};
+  tümNotlar.forEach(n => {
+    if (!byMusteri[n.musteri]) byMusteri[n.musteri] = [];
+    byMusteri[n.musteri].push(n);
+  });
+
+  el.innerHTML = Object.entries(byMusteri).map(([musteri, notArr]) => `
+    <div style="margin-bottom:12px">
+      <div style="font-size:11px;font-weight:700;color:var(--fire2);margin-bottom:6px">👤 ${musteri}</div>
+      ${notArr.map(n => `
+        <div style="display:flex;align-items:flex-start;gap:8px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:10px 12px;margin-bottom:6px">
+          <div style="flex:1">
+            <div style="font-size:13px">${n.text}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:3px">${n.tarih}</div>
+          </div>
+          <button onclick="deleteMushteriNot('${musteri}','${n.id}')" style="background:none;border:none;color:var(--muted);font-size:14px;cursor:pointer;opacity:.6">✕</button>
+        </div>`).join('')}
+    </div>`).join('');
+}
+
+// ─── AÇILIŞ UYARISI (panel her açıldığında) ───
+function checkOdemeUyari() {
+  const today = new Date();
+  const acil = crmClients.filter(c => {
+    const { nextPayment, daysLeft } = getCRMStatus(c);
+    const daysToPayment = Math.ceil((nextPayment - today) / (1000*60*60*24));
+    return daysLeft > 0 && daysToPayment >= 0 && daysToPayment <= 3;
+  });
+  if (acil.length) {
+    setTimeout(() => {
+      toast('💳 ' + acil.length + ' müşterinin ödemesi 3 gün içinde! Görevlerim sekmesini kontrol et.');
+    }, 1500);
+  }
+}
+
 // Auto-connect on load
 window.addEventListener('load', () => {
   const urlEl = document.getElementById('sb-url');
@@ -2767,6 +3054,8 @@ window.addEventListener('load', () => {
   updateSbStatus(true);
   // Auto-load reports if on tracker tab
   setTimeout(() => loadReports(), 500);
+  // Ödeme uyarısı kontrolü
+  setTimeout(() => checkOdemeUyari(), 2000);
   // Set centered hero photo from existing logo image
   const heroImg = document.getElementById('tpHeroImg');
   const existingLogo = document.querySelector('.bc-logo-mark img');
