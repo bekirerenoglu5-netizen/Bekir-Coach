@@ -1824,20 +1824,78 @@ function resetProgramForm() {
 function renderProgList() {
   const c = document.getElementById('progListWrap');
   if (!savedProgs.length) {
+    c.innerHTML = '<div style="text-align:center;color:var(--muted);padding:40px 20px;font-size:14px">⏳ Programlar yükleniyor...</div>';
+  } else {
+    _drawProgList();
+  }
+  // Her zaman Supabase'den de çek — telefon/bilgisayar senkronizasyonu
+  _loadProgsFromSupabase();
+}
+
+async function _loadProgsFromSupabase() {
+  try {
+    const res = await fetch(sbUrl + '/rest/v1/programs?select=short_id,member_name,program_name,data,created_at&order=created_at.desc&limit=100', {
+      headers: { 'apikey': sbKey, 'Authorization': 'Bearer ' + sbKey }
+    });
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows.length) return;
+
+    // Supabase'deki programları localStorage ile birleştir
+    const sbProgs = rows.map(r => r.data).filter(Boolean);
+    const localIds = new Set(savedProgs.map(p => p.id));
+
+    // Supabase'de olup localStorage'da olmayanları ekle
+    let added = 0;
+    sbProgs.forEach(p => {
+      if (p && p.id && !localIds.has(p.id)) {
+        savedProgs.push(p);
+        added++;
+      }
+    });
+
+    if (added > 0) {
+      localStorage.setItem('bc_programs', JSON.stringify(savedProgs));
+    }
+
+    _drawProgList();
+  } catch(e) {
+    console.log('Supabase prog yükleme hatası:', e);
+    _drawProgList();
+  }
+}
+
+function _drawProgList() {
+  const c = document.getElementById('progListWrap');
+  if (!c) return;
+  if (!savedProgs.length) {
     c.innerHTML = '<div style="text-align:center;color:var(--muted);padding:60px 20px;font-size:14px">Henüz program oluşturmadınız.</div>';
     return;
   }
-  c.innerHTML = `<div class="prog-list">${savedProgs.map(p => `
-    <div class="prog-card">
-      <div class="prog-info">
-        <div class="prog-name">${p.name}</div>
-        <div class="prog-meta">👤 ${p.member} &nbsp;·&nbsp; 📅 ${p.created} &nbsp;·&nbsp; ${p.exercises.length} hareket &nbsp;·&nbsp; ${p.days.length} gün/hafta</div>
+  // Ada göre grupla
+  const byMember = {};
+  savedProgs.forEach(p => {
+    const m = p.member || 'Diğer';
+    if (!byMember[m]) byMember[m] = [];
+    byMember[m].push(p);
+  });
+
+  c.innerHTML = Object.entries(byMember).map(([member, progs]) => `
+    <div style="margin-bottom:20px">
+      <div style="font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--fire2);margin-bottom:8px;padding-left:4px">👤 ${member}</div>
+      <div class="prog-list">${progs.map(p => `
+        <div class="prog-card">
+          <div class="prog-info">
+            <div class="prog-name">${p.name}</div>
+            <div class="prog-meta">📅 ${p.created || ''} &nbsp;·&nbsp; ${(p.exercises||[]).length} hareket &nbsp;·&nbsp; ${(p.days||[]).length} gün/hafta</div>
+          </div>
+          <span class="tag tag-fire">${p.level||''}</span>
+          <button class="btn btn-ghost btn-sm" onclick="editProgram('${p.id}')">✏️ Düzenle</button>
+          <button class="btn btn-ghost btn-sm" onclick="copyProgLink('${p.id}')">Linki Kopyala</button>
+          <button class="btn btn-danger" onclick="deleteProg('${p.id}')">Sil</button>
+        </div>`).join('')}
       </div>
-      <span class="tag tag-fire">${p.level}</span>
-      <button class="btn btn-ghost btn-sm" onclick="editProgram('${p.id}')">✏️ Düzenle</button>
-      <button class="btn btn-ghost btn-sm" onclick="copyProgLink('${p.id}')">Linki Kopyala</button>
-      <button class="btn btn-danger" onclick="deleteProg('${p.id}')">Sil</button>
-    </div>`).join('')}</div>`;
+    </div>`).join('');
 }
 
 function copyProgLink(id) {
