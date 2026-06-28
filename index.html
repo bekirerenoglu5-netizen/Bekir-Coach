@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bekir Coach</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#FF5C00">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bekir Coach">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="application-name" content="Bekir Coach">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
@@ -1119,6 +1128,11 @@ input[type=range].mood-range::-moz-range-thumb{
     <div class="mv-hero-name" id="mv-prog-name">Program <span class="accent">Yükleniyor</span></div>
     <div class="mv-hero-sub" id="mv-sub"></div>
     <div class="mv-stats" id="mv-stats"></div>
+    <!-- Bekir'e Sor WhatsApp Butonu -->
+    <a href="https://wa.me/905055431935?text=Merhaba%20Bekir%20Hoca%2C%20program%20hakk%C4%B1nda%20bir%20sorum%20var." target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;font-weight:700;text-decoration:none;margin-top:12px;box-shadow:0 4px 12px rgba(37,211,102,.35)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+      Bekir'e Sor
+    </a>
   </div>
 
   <div class="mv-body">
@@ -2647,7 +2661,8 @@ function renderCRM() {
   list.innerHTML = filtered.map(c => {
     const { daysLeft, end, nextPayment } = getCRMStatus(c);
     const statusColor = daysLeft > 7 ? '#3DDB85' : daysLeft > 0 ? '#FFB347' : '#FF6B6B';
-    const statusText = daysLeft > 7 ? '✅ Aktif' : daysLeft > 0 ? '⚠️ ' + daysLeft + ' gün kaldı' : '❌ Süresi doldu';
+    const statusText = daysLeft > 7 ? '✅ Aktif — ' + daysLeft + ' gün kaldı' : daysLeft > 0 ? '⚠️ ' + daysLeft + ' GÜN KALDI' : '❌ Süresi doldu';
+    const daysLabel = daysLeft > 0 ? daysLeft + ' GÜN' : 'BİTTİ';
     const endStr = end.toLocaleDateString('tr-TR');
     const nextPayStr = nextPayment.toLocaleDateString('tr-TR');
     const riskColor = c.risk === 'red' ? '#FF6B6B' : c.risk === 'yellow' ? '#FFB347' : '#3DDB85';
@@ -2669,8 +2684,13 @@ function renderCRM() {
           ${c.note ? `<div style="font-size:12px;color:var(--muted);margin-top:6px">💬 ${c.note}</div>` : ''}
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
-          <div style="background:${statusColor}22;border:1px solid ${statusColor}44;color:${statusColor};font-size:12px;font-weight:700;padding:5px 12px;border-radius:8px">${statusText}</div>
-          <div style="font-size:11px;color:var(--muted);text-align:right">Sonraki ödeme: ${nextPayStr}</div>
+          <!-- Gün sayacı -->
+          <div style="text-align:center;background:${statusColor}18;border:2px solid ${statusColor}55;border-radius:12px;padding:8px 14px;min-width:80px">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;color:${statusColor};line-height:1">${daysLabel}</div>
+            <div style="font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.06em;text-transform:uppercase">${daysLeft > 0 ? 'kaldı' : 'program bitti'}</div>
+          </div>
+          <div style="background:${statusColor}22;border:1px solid ${statusColor}44;color:${statusColor};font-size:11px;font-weight:700;padding:5px 12px;border-radius:8px;text-align:center">${statusText}</div>
+          <div style="font-size:11px;color:var(--muted);text-align:right">🏁 Bitiş: ${endStr}<br>💳 Ödeme: ${nextPayStr}</div>
           ${c.risk === 'red' ? `<a href="https://wa.me/905055431935?text=${encodeURIComponent('Merhaba, '+c.name+' için sağlık değerlendirmesi gerekiyor.')}" target="_blank" style="background:rgba(61,219,133,.1);border:1px solid rgba(61,219,133,.25);color:#3DDB85;border-radius:7px;font-size:11px;padding:4px 10px;text-decoration:none">📲 WA Yönlendir</a>` : ''}
           <button onclick="editCRMClient('${c.id}')" style="background:rgba(255,92,0,.1);border:1px solid rgba(255,92,0,.25);color:#FF8C42;border-radius:7px;font-size:11px;padding:4px 10px;cursor:pointer">✏️ Düzenle</button>
           <button onclick="deleteCRMClient('${c.id}')" style="background:rgba(255,100,100,.1);border:1px solid rgba(255,100,100,.2);color:#FF8888;border-radius:7px;font-size:11px;padding:4px 10px;cursor:pointer">🗑 Sil</button>
@@ -3385,6 +3405,17 @@ async function loadProgramById(shortId) {
   // Default sample
   loadTemplate('upper');
 })();
+</script>
+
+<script>
+// PWA Service Worker kaydı
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/Bekir-Coach/sw.js')
+      .then(reg => console.log('SW kayıtlı:', reg.scope))
+      .catch(err => console.log('SW hatası:', err));
+  });
+}
 </script>
 </body>
 </html>
