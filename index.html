@@ -746,6 +746,9 @@ input[type=range].mood-range::-moz-range-thumb{
         <button class="btn btn-fire btn-full" style="font-size:15px;padding:14px;letter-spacing:.03em" onclick="generateLink()">
           ⚡ Program Linki Oluştur & Gönder
         </button>
+        <button class="btn btn-ghost btn-full" style="font-size:13px;padding:10px;margin-top:8px" onclick="resetProgramForm()">
+          🆕 Formu Temizle — Yeni Program Oluştur
+        </button>
         <div id="linkOutput" style="display:none">
           <div class="link-output">
             <input id="generatedLink" type="text" readonly>
@@ -1773,11 +1776,34 @@ async function generateLink() {
 
   document.getElementById('generatedLink').value = link;
   document.getElementById('linkOutput').style.display = 'block';
+
+  // Formu sıfırla — yeni gün için temiz başlangıç
+  setTimeout(() => {
+    if (confirm('Program kaydedildi! ✅\n\nYeni bir gün programı oluşturmak ister misin?\n"Tamam" → formu temizle\n"İptal" → mevcut formu koru')) {
+      resetProgramForm();
+    }
+  }, 800);
 }
 
 function copyLink() {
   navigator.clipboard.writeText(document.getElementById('generatedLink').value)
     .then(() => toast('📋 Link kopyalandı!'));
+}
+
+function resetProgramForm() {
+  // Sadece hareketleri ve gün seçimini temizle
+  exercises = [];
+  // Program adını temizle (gün değişiyor)
+  const pname = document.getElementById('programName'); if(pname) pname.value = '';
+  // Gün seçimlerini temizle
+  ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'].forEach(d => {
+    const cb = document.getElementById('day_' + d); if(cb) cb.checked = false;
+  });
+  // Link çıktısını gizle
+  const lo = document.getElementById('linkOutput'); if(lo) lo.style.display = 'none';
+  // Builder'ı yenile
+  renderBuilder();
+  toast('🆕 Hareketler temizlendi — üye bilgileri korundu!');
 }
 
 /* ─── PROGRAMS LIST ─── */
@@ -1794,6 +1820,7 @@ function renderProgList() {
         <div class="prog-meta">👤 ${p.member} &nbsp;·&nbsp; 📅 ${p.created} &nbsp;·&nbsp; ${p.exercises.length} hareket &nbsp;·&nbsp; ${p.days.length} gün/hafta</div>
       </div>
       <span class="tag tag-fire">${p.level}</span>
+      <button class="btn btn-ghost btn-sm" onclick="editProgram('${p.id}')">✏️ Düzenle</button>
       <button class="btn btn-ghost btn-sm" onclick="copyProgLink('${p.id}')">Linki Kopyala</button>
       <button class="btn btn-danger" onclick="deleteProg('${p.id}')">Sil</button>
     </div>`).join('')}</div>`;
@@ -1805,6 +1832,95 @@ function copyProgLink(id) {
   const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(p))));
   const link = `${location.origin}${location.pathname}?data=${encoded}`;
   navigator.clipboard.writeText(link).then(() => toast('📋 Kopyalandı!'));
+}
+
+function editProgram(id) {
+  const p = savedProgs.find(x => x.id === id);
+  if (!p) return;
+
+  // "Program Oluştur" sekmesine geç
+  showTab('builder');
+
+  // Form alanlarını doldur
+  document.getElementById('memberName').value = p.member || '';
+  document.getElementById('programName').value = p.name || '';
+  document.getElementById('note').value = p.note || '';
+  const levelEl = document.getElementById('level');
+  if (levelEl) levelEl.value = p.level || 'Başlangıç';
+  const durEl = document.getElementById('duration');
+  if (durEl) durEl.value = p.duration || '8';
+
+  // Günleri seç
+  ['Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi','Pazar'].forEach(d => {
+    const cb = document.getElementById('day_' + d);
+    if (cb) cb.checked = p.days && p.days.includes(d);
+  });
+
+  // Hareketleri yükle
+  exercises = p.exercises ? p.exercises.map(e => ({...e})) : [];
+  renderBuilder();
+
+  // Kaydet butonunu "Güncelle" moduna al
+  const genBtn = document.querySelector('[onclick="generateLink()"]');
+  if (genBtn) {
+    genBtn.textContent = '💾 Programı Güncelle & Linki Yenile';
+    genBtn.setAttribute('onclick', `updateProgram('${id}')`);
+  }
+
+  // Link çıktısını gizle
+  const lo = document.getElementById('linkOutput');
+  if (lo) lo.style.display = 'none';
+
+  toast('✏️ Program düzenleme modunda — değişiklikleri yapıp "Güncelle" butonuna bas');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+async function updateProgram(id) {
+  const member = document.getElementById('memberName').value.trim();
+  const pname = document.getElementById('programName').value.trim();
+  if (!member) { toast('Üye adını gir!'); return; }
+  if (!pname) { toast('Program adını gir!'); return; }
+  if (!exercises.length) { toast('En az 1 hareket ekle!'); return; }
+  const days = getSelectedDays();
+  if (!days.length) { toast('En az 1 gün seç!'); return; }
+
+  const idx = savedProgs.findIndex(x => x.id === id);
+  if (idx < 0) { toast('Program bulunamadı!'); return; }
+
+  const updated = {
+    ...savedProgs[idx],
+    member, name: pname,
+    level: document.getElementById('level').value,
+    duration: document.getElementById('duration').value,
+    note: document.getElementById('note').value.trim(),
+    days, exercises: exercises.map(e => ({...e})),
+  };
+
+  savedProgs[idx] = updated;
+  localStorage.setItem('bc_programs', JSON.stringify(savedProgs));
+
+  // Supabase'i güncelle
+  try {
+    await fetch(sbUrl + '/rest/v1/programs?short_id=eq.' + id, {
+      method: 'PATCH',
+      headers: {
+        'apikey': sbKey, 'Authorization': 'Bearer ' + sbKey,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ data: updated, program_name: pname, member_name: member })
+    });
+  } catch(e) { console.log('Supabase update failed:', e); }
+
+  // Butonu eski haline getir
+  const genBtn = document.querySelector('[onclick*="updateProgram"]');
+  if (genBtn) {
+    genBtn.textContent = '⚡ Program Linki Oluştur & Gönder';
+    genBtn.setAttribute('onclick', 'generateLink()');
+  }
+
+  toast('✅ Program güncellendi!');
+  resetProgramForm();
+  showTab('programs');
 }
 
 function deleteProg(id) {
